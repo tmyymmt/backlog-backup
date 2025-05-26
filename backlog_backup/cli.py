@@ -62,6 +62,16 @@ def parse_args() -> argparse.Namespace:
         "--list-projects", action="store_true", help="List all accessible projects"
     )
     
+    # Project filter settings
+    parser.add_argument(
+        "--include-all-space-projects", action="store_true", 
+        help="Include all projects in the space, not just those the user has access to (requires admin privileges)"
+    )
+    parser.add_argument(
+        "--archived-projects", choices=["all", "archived-only", "non-archived-only"], default="all",
+        help="Filter projects by archive status (default: 'all')"
+    )
+    
     # Output directory
     parser.add_argument(
         "--output", "-o", default="./backup", 
@@ -91,20 +101,34 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def list_projects(client: BacklogAPIClient) -> None:
+def list_projects(
+    client: BacklogAPIClient,
+    all_projects: bool = False,
+    archived_filter: str = "all"
+) -> None:
     """List all accessible projects.
     
     Args:
         client: Backlog API client
+        all_projects: If True, includes all projects in the space (requires admin privileges)
+        archived_filter: Filter projects by archive status ("all", "archived-only", or "non-archived-only")
     """
     try:
-        projects = client.get_projects()
+        # Convert filter choice to API parameter
+        archived = None
+        if archived_filter == "archived-only":
+            archived = True
+        elif archived_filter == "non-archived-only":
+            archived = False
+            
+        projects = client.get_projects(all_projects=all_projects, archived=archived)
         print("\nAccessible Backlog Projects:")
-        print("-" * 80)
-        print(f"{'Project Key':<15} {'Project Name':<50} {'Project ID':<10}")
-        print("-" * 80)
+        print("-" * 95)
+        print(f"{'Project Key':<15} {'Project Name':<50} {'Project ID':<10} {'Archived':<10}")
+        print("-" * 95)
         for project in projects:
-            print(f"{project['projectKey']:<15} {project['name']:<50} {project['id']:<10}")
+            archived_status = "Yes" if project.get("archived", False) else "No"
+            print(f"{project['projectKey']:<15} {project['name']:<50} {project['id']:<10} {archived_status:<10}")
         print()
     except Exception as e:
         logging.error(f"Failed to list projects: {e}")
@@ -184,7 +208,11 @@ def main() -> int:
     
     # Handle project listing
     if args.list_projects:
-        list_projects(client)
+        list_projects(
+            client, 
+            all_projects=args.include_all_space_projects, 
+            archived_filter=args.archived_projects
+        )
         return 0
         
     # Create output directory if it doesn't exist
@@ -203,7 +231,18 @@ def main() -> int:
     try:
         if args.all_projects:
             logging.info("Starting backup for all accessible projects")
-            projects = client.get_projects()
+            
+            # Convert filter choice to API parameter
+            archived = None
+            if args.archived_projects == "archived-only":
+                archived = True
+            elif args.archived_projects == "non-archived-only":
+                archived = False
+                
+            projects = client.get_projects(
+                all_projects=args.include_all_space_projects,
+                archived=archived
+            )
             
             for project in projects:
                 project_key = project["projectKey"]

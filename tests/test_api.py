@@ -131,6 +131,66 @@ class TestBacklogAPIClient(unittest.TestCase):
         self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/wikis/123/attachments/456/download")
         self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
     @mock.patch("backlog_backup.api.client.requests.request")
+    def test_get_projects_default(self, mock_request):
+        """Test the get_projects method with default parameters."""
+        # Set up mock
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json.return_value = [{"id": 1, "name": "Project 1", "projectKey": "PROJ1"}]
+        mock_request.return_value = mock_response
+        
+        # Call the method
+        result = self.client.get_projects()
+        
+        # Assertions
+        mock_request.assert_called_once()
+        self.assertEqual(result, [{"id": 1, "name": "Project 1", "projectKey": "PROJ1"}])
+        
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["method"], "GET")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/projects")
+        self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
+        # No additional parameters should be sent
+        self.assertEqual(len(kwargs["params"]), 1)
+        
+    @mock.patch("backlog_backup.api.client.requests.request")
+    def test_get_projects_with_filters(self, mock_request):
+        """Test the get_projects method with filters."""
+        # Set up mock
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json.return_value = [{"id": 1, "name": "Project 1", "projectKey": "PROJ1"}]
+        mock_request.return_value = mock_response
+        
+        # Call the method with all=True and archived=True
+        result = self.client.get_projects(all_projects=True, archived=True)
+        
+        # Assertions
+        self.assertEqual(result, [{"id": 1, "name": "Project 1", "projectKey": "PROJ1"}])
+        
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["method"], "GET")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/projects")
+        self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
+        self.assertEqual(kwargs["params"]["all"], "true")
+        self.assertEqual(kwargs["params"]["archived"], "true")
+        
+        # Call again with different parameters
+        mock_request.reset_mock()
+        mock_request.return_value = mock_response
+        
+        result = self.client.get_projects(all_projects=False, archived=False)
+        
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["params"].get("all"), None)  # all parameter should not be sent
+        self.assertEqual(kwargs["params"]["archived"], "false")
+        
+    @mock.patch("backlog_backup.api.client.requests.request")
     def test_get_issue_comments(self, mock_request):
         """Test the get_issue_comments method uses correct parameters."""
         # Set up mock

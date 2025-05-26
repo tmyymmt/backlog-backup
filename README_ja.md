@@ -63,6 +63,9 @@ docker run -v $(pwd)/backup:/app/backup -e BACKLOG_API_KEY=YOUR_API_KEY backlog-
 # アクセス可能なすべてのプロジェクトを一覧表示
 backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --list-projects
 
+# スペース内のすべての非アーカイブプロジェクトを一覧表示（管理者権限が必要）
+backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --list-projects --include-all-space-projects --archived-projects non-archived-only
+
 # プロジェクトの課題をバックアップ
 backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --issues --output ./backup
 
@@ -75,6 +78,9 @@ backlog-backup --domain example.backlog.com --project PROJECT_KEY --all --output
 
 # アクセス可能なすべてのプロジェクトをバックアップ
 backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --all-projects --all --output ./backup
+
+# 非アーカイブプロジェクトのみをバックアップ
+backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --all-projects --archived-projects non-archived-only --all --output ./backup
 ```
 
 ### コマンドラインオプション
@@ -87,6 +93,10 @@ backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --all-project
 --project PROJECT     バックアップするBacklogプロジェクトキー
 --all-projects        アクセス可能なすべてのプロジェクトをバックアップ
 --list-projects       アクセス可能なすべてのプロジェクトを一覧表示
+--include-all-space-projects
+                      ユーザーがアクセス可能なプロジェクトだけでなく、スペース内のすべてのプロジェクトを対象にする（管理者権限が必要）
+--archived-projects {all,archived-only,non-archived-only}
+                      プロジェクトのアーカイブ状態でフィルタリング（デフォルト: 'all'）
 --output OUTPUT, -o OUTPUT
                       バックアップの出力ディレクトリ（デフォルト：'./backup'）
 --issues              プロジェクトの課題をバックアップ

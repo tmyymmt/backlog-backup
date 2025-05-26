@@ -152,13 +152,31 @@ class BacklogAPIClient:
         """
         return self._make_request("DELETE", endpoint, params=params)
     
-    def get_projects(self) -> List[Dict[str, Any]]:
+    def get_projects(
+        self,
+        all_projects: bool = False,
+        archived: Optional[bool] = None
+    ) -> List[Dict[str, Any]]:
         """Get list of projects.
+        
+        Args:
+            all_projects: If True, returns all projects in the space (requires admin privileges).
+                          If False, returns only projects the user has access to.
+            archived: Filter by archive status.
+                     If None, returns all projects.
+                     If True, returns only archived projects.
+                     If False, returns only non-archived projects.
         
         Returns:
             List of project information
         """
-        return self.get("/projects")
+        params = {}
+        if all_projects:
+            params["all"] = "true"
+        if archived is not None:
+            params["archived"] = str(archived).lower()
+            
+        return self.get("/projects", params=params)
     
     def get_project(self, project_id_or_key: str) -> Dict[str, Any]:
         """Get project information.
