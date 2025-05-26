@@ -50,6 +50,9 @@ docker build -t backlog-backup .
 
 # Run the container
 docker run -v $(pwd)/backup:/app/backup backlog-backup --help
+
+# Run with environment variable for API key
+docker run -v $(pwd)/backup:/app/backup -e BACKLOG_API_KEY=YOUR_API_KEY backlog-backup --domain example.backlog.com --project PROJECT_KEY --all
 ```
 
 ## Usage
@@ -57,11 +60,21 @@ docker run -v $(pwd)/backup:/app/backup backlog-backup --help
 ### Basic Usage
 
 ```bash
+# List all accessible projects
+backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --list-projects
+
 # Backup issues for a project
 backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --issues --output ./backup
 
 # Backup everything for a project
 backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --all --output ./backup
+
+# Use API key from environment variable
+export BACKLOG_API_KEY=YOUR_API_KEY
+backlog-backup --domain example.backlog.com --project PROJECT_KEY --all --output ./backup
+
+# Backup all accessible projects
+backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --all-projects --all --output ./backup
 ```
 
 ### Command Line Options
@@ -70,8 +83,10 @@ backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --project PRO
 --version             Show version information
 -v, --verbose         Enable verbose output
 --domain DOMAIN       Backlog domain (e.g., 'example.backlog.com')
---api-key API_KEY     Backlog API key
+--api-key API_KEY     Backlog API key (can also be set via BACKLOG_API_KEY environment variable)
 --project PROJECT     Backlog project key to backup
+--all-projects        Backup all accessible projects
+--list-projects       List all accessible projects
 --output OUTPUT, -o OUTPUT
                       Output directory for backup (default: './backup')
 --issues              Backup project issues

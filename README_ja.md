@@ -50,6 +50,9 @@ docker build -t backlog-backup .
 
 # コンテナを実行
 docker run -v $(pwd)/backup:/app/backup backlog-backup --help
+
+# APIキーを環境変数として実行
+docker run -v $(pwd)/backup:/app/backup -e BACKLOG_API_KEY=YOUR_API_KEY backlog-backup --domain example.backlog.com --project PROJECT_KEY --all
 ```
 
 ## 使い方
@@ -57,11 +60,21 @@ docker run -v $(pwd)/backup:/app/backup backlog-backup --help
 ### 基本的な使用方法
 
 ```bash
+# アクセス可能なすべてのプロジェクトを一覧表示
+backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --list-projects
+
 # プロジェクトの課題をバックアップ
 backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --issues --output ./backup
 
 # プロジェクトのすべてをバックアップ
 backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --all --output ./backup
+
+# 環境変数からAPIキーを使用
+export BACKLOG_API_KEY=YOUR_API_KEY
+backlog-backup --domain example.backlog.com --project PROJECT_KEY --all --output ./backup
+
+# アクセス可能なすべてのプロジェクトをバックアップ
+backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --all-projects --all --output ./backup
 ```
 
 ### コマンドラインオプション
@@ -70,8 +83,10 @@ backlog-backup --domain example.backlog.com --api-key YOUR_API_KEY --project PRO
 --version             バージョン情報を表示
 -v, --verbose         詳細出力を有効化
 --domain DOMAIN       Backlogドメイン（例：'example.backlog.com'）
---api-key API_KEY     Backlog APIキー
+--api-key API_KEY     Backlog APIキー（BACKLOG_API_KEY環境変数でも設定可能）
 --project PROJECT     バックアップするBacklogプロジェクトキー
+--all-projects        アクセス可能なすべてのプロジェクトをバックアップ
+--list-projects       アクセス可能なすべてのプロジェクトを一覧表示
 --output OUTPUT, -o OUTPUT
                       バックアップの出力ディレクトリ（デフォルト：'./backup'）
 --issues              プロジェクトの課題をバックアップ

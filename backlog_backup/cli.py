@@ -2,10 +2,13 @@
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 
 from . import __version__
+from .api.client import BacklogAPIClient
 from .backup.issues import backup_issues
 from .backup.wiki import backup_wiki
 from .backup.files import backup_files
@@ -44,12 +47,19 @@ def parse_args() -> argparse.Namespace:
         "--domain", required=True, help="Backlog domain (e.g., 'example.backlog.com')"
     )
     parser.add_argument(
-        "--api-key", required=True, help="Backlog API key"
+        "--api-key", required=False, help="Backlog API key (can also be set via BACKLOG_API_KEY environment variable)"
     )
     
     # Project settings
-    parser.add_argument(
-        "--project", required=True, help="Backlog project key to backup"
+    project_group = parser.add_mutually_exclusive_group()
+    project_group.add_argument(
+        "--project", help="Backlog project key to backup"
+    )
+    project_group.add_argument(
+        "--all-projects", action="store_true", help="Backup all accessible projects"
+    )
+    project_group.add_argument(
+        "--list-projects", action="store_true", help="List all accessible projects"
     )
     
     # Output directory
@@ -81,6 +91,79 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def list_projects(client: BacklogAPIClient) -> None:
+    """List all accessible projects.
+    
+    Args:
+        client: Backlog API client
+    """
+    try:
+        projects = client.get_projects()
+        print("\nAccessible Backlog Projects:")
+        print("-" * 80)
+        print(f"{'Project Key':<15} {'Project Name':<50} {'Project ID':<10}")
+        print("-" * 80)
+        for project in projects:
+            print(f"{project['projectKey']:<15} {project['name']:<50} {project['id']:<10}")
+        print()
+    except Exception as e:
+        logging.error(f"Failed to list projects: {e}")
+        if logging.getLogger().level == logging.DEBUG:
+            logging.exception("Detailed error information:")
+        sys.exit(1)
+
+
+def backup_project(
+    domain: str, 
+    api_key: str, 
+    project_key: str, 
+    output_dir: Path,
+    backup_issues_flag: bool,
+    backup_wiki_flag: bool,
+    backup_files_flag: bool,
+    backup_git_flag: bool,
+    backup_svn_flag: bool
+) -> None:
+    """Backup a single project.
+    
+    Args:
+        domain: Backlog domain
+        api_key: Backlog API key
+        project_key: Project key to backup
+        output_dir: Output directory
+        backup_issues_flag: Whether to backup issues
+        backup_wiki_flag: Whether to backup wiki
+        backup_files_flag: Whether to backup files
+        backup_git_flag: Whether to backup Git repositories
+        backup_svn_flag: Whether to backup SVN repositories
+    """
+    project_output_dir = output_dir / project_key
+    project_output_dir.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        if backup_issues_flag:
+            backup_issues(domain, api_key, project_key, project_output_dir)
+            
+        if backup_wiki_flag:
+            backup_wiki(domain, api_key, project_key, project_output_dir)
+            
+        if backup_files_flag:
+            backup_files(domain, api_key, project_key, project_output_dir)
+            
+        if backup_git_flag:
+            backup_git(domain, api_key, project_key, project_output_dir)
+            
+        if backup_svn_flag:
+            backup_svn(domain, api_key, project_key, project_output_dir)
+            
+        logging.info(f"Backup for project '{project_key}' completed successfully. Files saved to {project_output_dir}")
+            
+    except Exception as e:
+        logging.error(f"Backup for project '{project_key}' failed: {e}")
+        if logging.getLogger().level == logging.DEBUG:
+            logging.exception("Detailed error information:")
+
+
 def main() -> int:
     """Main entry point for the CLI.
     
@@ -90,34 +173,75 @@ def main() -> int:
     args = parse_args()
     setup_logging(args.verbose)
     
-    logging.info(f"Starting Backlog backup for project: {args.project}")
+    # Get API key from argument or environment variable
+    api_key = args.api_key or os.environ.get("BACKLOG_API_KEY")
+    if not api_key:
+        logging.error("API key must be provided either via --api-key argument or BACKLOG_API_KEY environment variable")
+        return 1
+        
+    # Create Backlog API client
+    client = BacklogAPIClient(args.domain, api_key)
     
+    # Handle project listing
+    if args.list_projects:
+        list_projects(client)
+        return 0
+        
     # Create output directory if it doesn't exist
-    output_dir = Path(args.output) / args.project
+    output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Determine what to backup
     backup_all = args.all
+    backup_issues_flag = backup_all or args.issues
+    backup_wiki_flag = backup_all or args.wiki
+    backup_files_flag = backup_all or args.files
+    backup_git_flag = backup_all or args.git
+    backup_svn_flag = backup_all or args.svn
     
+    # Handle project-specific or all-projects backup
     try:
-        if backup_all or args.issues:
-            backup_issues(args.domain, args.api_key, args.project, output_dir)
+        if args.all_projects:
+            logging.info("Starting backup for all accessible projects")
+            projects = client.get_projects()
             
-        if backup_all or args.wiki:
-            backup_wiki(args.domain, args.api_key, args.project, output_dir)
+            for project in projects:
+                project_key = project["projectKey"]
+                logging.info(f"Starting backup for project: {project_key}")
+                backup_project(
+                    args.domain,
+                    api_key,
+                    project_key,
+                    output_dir,
+                    backup_issues_flag,
+                    backup_wiki_flag,
+                    backup_files_flag,
+                    backup_git_flag,
+                    backup_svn_flag
+                )
+                
+            logging.info(f"Backup for all projects completed. Files saved to {output_dir}")
+            return 0
             
-        if backup_all or args.files:
-            backup_files(args.domain, args.api_key, args.project, output_dir)
+        elif args.project:
+            logging.info(f"Starting Backlog backup for project: {args.project}")
+            backup_project(
+                args.domain,
+                api_key,
+                args.project,
+                output_dir,
+                backup_issues_flag,
+                backup_wiki_flag,
+                backup_files_flag,
+                backup_git_flag,
+                backup_svn_flag
+            )
+            return 0
             
-        if backup_all or args.git:
-            backup_git(args.domain, args.api_key, args.project, output_dir)
+        else:
+            logging.error("Either --project, --all-projects, or --list-projects must be specified")
+            return 1
             
-        if backup_all or args.svn:
-            backup_svn(args.domain, args.api_key, args.project, output_dir)
-            
-        logging.info(f"Backup completed successfully. Files saved to {output_dir}")
-        return 0
-        
     except Exception as e:
         logging.error(f"Backup failed: {e}")
         if args.verbose:
