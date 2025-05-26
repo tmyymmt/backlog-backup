@@ -53,6 +53,14 @@ venv.bak/
 # Docker
 .docker/
 
+# PyInstaller
+# Keep base spec files
+!backlog-backup.spec
+# Exclude auto-generated spec files
+*-linux.spec
+*-win.spec
+*-macos.spec
+
 # Project specific
 config.ini
 *.log
