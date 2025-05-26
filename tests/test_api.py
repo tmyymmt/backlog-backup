@@ -86,6 +86,44 @@ class TestBacklogAPIClient(unittest.TestCase):
         self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
         self.assertEqual(kwargs["params"]["projectId[]"], "TEST_PROJECT")
 
+    @mock.patch("backlog_backup.api.client.requests.request")
+    def test_download_attachment(self, mock_request):
+        """Test the download_attachment method uses correct parameters."""
+        # Set up mock
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/octet-stream"}
+        mock_response.content = b"test attachment content"
+        mock_request.return_value = mock_response
+        
+        # Call the method
+        result = self.client.download_attachment("TEST-1", "123")
+        
+        # Assertions
+        mock_request.assert_called_once()
+    @mock.patch("backlog_backup.api.client.requests.request")
+    def test_download_wiki_attachment(self, mock_request):
+        """Test the download_wiki_attachment method uses correct parameters."""
+        # Set up mock
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/octet-stream"}
+        mock_response.content = b"test wiki attachment content"
+        mock_request.return_value = mock_response
+        
+        # Call the method
+        result = self.client.download_wiki_attachment("123", "456")
+        
+        # Assertions
+        mock_request.assert_called_once()
+        self.assertEqual(result, b"test wiki attachment content")
+        
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["method"], "GET")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/wikis/123/attachments/456")
+        self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
+        self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
 
 if __name__ == "__main__":
     unittest.main()
