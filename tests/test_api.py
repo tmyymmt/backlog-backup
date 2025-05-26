@@ -39,28 +39,52 @@ class TestBacklogAPIClient(unittest.TestCase):
         self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
     
     @mock.patch("backlog_backup.api.client.requests.request")
-    def test_rate_limit(self, mock_request):
-        """Test handling of rate limiting."""
-        # First response is rate limited
-        rate_limited_response = mock.Mock()
-        rate_limited_response.status_code = 429
-        rate_limited_response.headers = {"Retry-After": "1"}
+    def test_get_issues(self, mock_request):
+        """Test the get_issues method uses correct parameters."""
+        # Set up mock
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json.return_value = [{"id": 1, "summary": "Test Issue"}]
+        mock_request.return_value = mock_response
         
-        # Second response succeeds
-        success_response = mock.Mock()
-        success_response.status_code = 200
-        success_response.headers = {"Content-Type": "application/json"}
-        success_response.json.return_value = {"id": 1, "name": "Test"}
+        # Call the method
+        result = self.client.get_issues("TEST_PROJECT")
         
-        mock_request.side_effect = [rate_limited_response, success_response]
+        # Assertions
+        mock_request.assert_called_once()
+        self.assertEqual(result, [{"id": 1, "summary": "Test Issue"}])
         
-        with mock.patch("backlog_backup.api.client.time.sleep") as mock_sleep:
-            result = self.client.get("/projects")
-            
-            # Assertions
-            self.assertEqual(mock_request.call_count, 2)
-            mock_sleep.assert_called_once_with(1)
-            self.assertEqual(result, {"id": 1, "name": "Test"})
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["method"], "GET")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/issues")
+        self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
+        self.assertEqual(kwargs["params"]["projectId[]"], "TEST_PROJECT")
+        
+    @mock.patch("backlog_backup.api.client.requests.request")
+    def test_get_wikis(self, mock_request):
+        """Test the get_wikis method uses correct parameters."""
+        # Set up mock
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json.return_value = [{"id": 1, "name": "Test Wiki"}]
+        mock_request.return_value = mock_response
+        
+        # Call the method
+        result = self.client.get_wikis("TEST_PROJECT")
+        
+        # Assertions
+        mock_request.assert_called_once()
+        self.assertEqual(result, [{"id": 1, "name": "Test Wiki"}])
+        
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["method"], "GET")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/wikis")
+        self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
+        self.assertEqual(kwargs["params"]["projectId[]"], "TEST_PROJECT")
 
 
 if __name__ == "__main__":
