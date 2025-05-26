@@ -243,7 +243,7 @@ class BacklogAPIClient:
         Returns:
             Attachment content
         """
-        endpoint = f"/issues/{issue_id_or_key}/attachments/{attachment_id}"
+        endpoint = f"/issues/{issue_id_or_key}/attachments/{attachment_id}/download"
         return self.get(endpoint)
     
     def get_wikis(self, project_id_or_key: str) -> List[Dict[str, Any]]:
@@ -292,7 +292,7 @@ class BacklogAPIClient:
         Returns:
             Attachment content
         """
-        endpoint = f"/wikis/{wiki_id}/attachments/{attachment_id}"
+        endpoint = f"/wikis/{wiki_id}/attachments/{attachment_id}/download"
         return self.get(endpoint)
     
     def get_git_repositories(self, project_id_or_key: str) -> List[Dict[str, Any]]:
