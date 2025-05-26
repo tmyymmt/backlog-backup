@@ -137,7 +137,7 @@ output_directory/
 
 ## ライセンス
 
-MIT
+MIT-0
 
 ## 参考情報
 

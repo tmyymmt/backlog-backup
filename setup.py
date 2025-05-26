@@ -17,7 +17,7 @@ setup(
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: MIT No Attribution License (MIT-0)",
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.8",

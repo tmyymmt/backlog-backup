@@ -137,7 +137,7 @@ output_directory/
 
 ## License
 
-MIT
+MIT-0
 
 ## References
 
