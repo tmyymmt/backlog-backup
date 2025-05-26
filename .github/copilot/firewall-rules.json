@@ -1,0 +1,9 @@
+{
+  "allowed": [
+    {
+      "domains": [
+        "developer.nulab.com"
+      ]
+    }
+  ]
+}
