@@ -189,7 +189,7 @@ class BacklogAPIClient:
         if params is None:
             params = {}
             
-        params["projectIdOrKey"] = project_id_or_key
+        params["projectId[]"] = project_id_or_key
         return self.get("/issues", params=params)
     
     def get_issue(self, issue_id_or_key: str) -> Dict[str, Any]:
@@ -255,7 +255,7 @@ class BacklogAPIClient:
         Returns:
             List of wiki pages
         """
-        params = {"projectIdOrKey": project_id_or_key}
+        params = {"projectId[]": project_id_or_key}
         return self.get("/wikis", params=params)
     
     def get_wiki(self, wiki_id: str) -> Dict[str, Any]:
