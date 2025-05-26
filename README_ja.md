@@ -38,6 +38,67 @@ pip install -e .
 pip install -e ".[scraping]"
 ```
 
+### スタンドアロン実行ファイルの使用
+
+Windows、macOS、Linuxプラットフォーム向けのスタンドアロン実行ファイルが利用できます。これらの実行ファイルは別途Pythonのインストールが不要です。
+
+#### ダウンロード
+
+[リリースページ](https://github.com/tmyymmt/backlog-backup/releases)からご使用のプラットフォームに適した実行ファイルをダウンロードしてください。
+
+#### 使用方法
+
+Windows:
+```
+backlog-backup-win.exe --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --all
+```
+
+macOS/Linux:
+```
+chmod +x backlog-backup-macos  # 実行可能にする（初回のみ）
+./backlog-backup-macos --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --all
+```
+
+### 独自の実行ファイルをビルド
+
+スタンドアロン実行ファイルをビルドするには：
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/tmyymmt/backlog-backup.git
+cd backlog-backup
+
+# 必要な依存関係をインストール
+pip install -e ".[build]"
+
+# 実行ファイルをビルド
+python build_executable.py
+
+# 単一ファイルの実行ファイルの場合
+python build_executable.py --one-file
+
+# コンソールウィンドウなしのWindows実行ファイル
+python build_executable.py --no-console
+
+# 出力名と場所をカスタマイズ
+python build_executable.py --name カスタム名 --output-dir ./my-builds
+```
+
+実行ファイルはデフォルトでは`dist`ディレクトリに作成されます。
+
+#### 高度なカスタマイズ
+
+ビルドプロセスの高度なカスタマイズには、含まれている`backlog-backup.spec`ファイルを変更し、PyInstallerを直接使用できます：
+
+```bash
+# PyInstallerをインストール
+pip install pyinstaller>=5.8.0
+
+# backlog-backup.specファイルを編集してビルドをカスタマイズ
+# 次にspecファイルを使用してビルド
+pyinstaller backlog-backup.spec
+```
+
 ### Dockerを使用
 
 ```bash

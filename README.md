@@ -38,6 +38,67 @@ pip install -e .
 pip install -e ".[scraping]"
 ```
 
+### Using standalone executable
+
+Standalone executables are available for Windows, macOS, and Linux platforms. These executables do not require a separate Python installation.
+
+#### Download
+
+Download the appropriate executable for your platform from the [releases page](https://github.com/tmyymmt/backlog-backup/releases).
+
+#### Usage
+
+On Windows:
+```
+backlog-backup-win.exe --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --all
+```
+
+On macOS/Linux:
+```
+chmod +x backlog-backup-macos  # Make executable (first time only)
+./backlog-backup-macos --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --all
+```
+
+### Build your own executable
+
+To build a standalone executable:
+
+```bash
+# Clone the repository
+git clone https://github.com/tmyymmt/backlog-backup.git
+cd backlog-backup
+
+# Install required dependencies
+pip install -e ".[build]"
+
+# Build the executable
+python build_executable.py
+
+# For a single-file executable
+python build_executable.py --one-file
+
+# For a Windows executable with no console window
+python build_executable.py --no-console
+
+# Customize the output name and location
+python build_executable.py --name custom-name --output-dir ./my-builds
+```
+
+The executable will be created in the `dist` directory by default.
+
+#### Advanced customization
+
+For advanced customization of the build process, you can modify the included `backlog-backup.spec` file and use PyInstaller directly:
+
+```bash
+# Install PyInstaller
+pip install pyinstaller>=5.8.0
+
+# Edit backlog-backup.spec file to customize the build
+# Then build using the spec file
+pyinstaller backlog-backup.spec
+```
+
 ### Using Docker
 
 ```bash

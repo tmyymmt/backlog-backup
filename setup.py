@@ -28,6 +28,9 @@ setup(
         "scraping": [
             "selenium>=4.0.0",
         ],
+        "build": [
+            "pyinstaller>=5.8.0",
+        ],
     },
     entry_points={
         "console_scripts": [
