@@ -7,13 +7,24 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from . import __version__
-from .api.client import BacklogAPIClient
-from .backup.issues import backup_issues
-from .backup.wiki import backup_wiki
-from .backup.files import backup_files
-from .backup.git import backup_git
-from .backup.svn import backup_svn
+# Modified imports for PyInstaller compatibility
+try:
+    from backlog_backup import __version__
+    from backlog_backup.api.client import BacklogAPIClient
+    from backlog_backup.backup.issues import backup_issues
+    from backlog_backup.backup.wiki import backup_wiki
+    from backlog_backup.backup.files import backup_files
+    from backlog_backup.backup.git import backup_git
+    from backlog_backup.backup.svn import backup_svn
+except ImportError:
+    # Fallback to relative imports for normal package usage
+    from . import __version__
+    from .api.client import BacklogAPIClient
+    from .backup.issues import backup_issues
+    from .backup.wiki import backup_wiki
+    from .backup.files import backup_files
+    from .backup.git import backup_git
+    from .backup.svn import backup_svn
 
 
 def setup_logging(verbose: bool = False) -> None:
