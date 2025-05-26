@@ -1,0 +1,2 @@
+env:
+  COPILOT_AGENT_FIREWALL_ALLOW_LIST_ADDITIONS: developer.nulab.com
