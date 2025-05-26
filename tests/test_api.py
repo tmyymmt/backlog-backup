@@ -101,6 +101,13 @@ class TestBacklogAPIClient(unittest.TestCase):
         
         # Assertions
         mock_request.assert_called_once()
+        self.assertEqual(result, b"test attachment content")
+        
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["method"], "GET")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/issues/TEST-1/attachments/123/download")
+        self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
     @mock.patch("backlog_backup.api.client.requests.request")
     def test_download_wiki_attachment(self, mock_request):
         """Test the download_wiki_attachment method uses correct parameters."""
@@ -121,8 +128,73 @@ class TestBacklogAPIClient(unittest.TestCase):
         # Check the parameters
         args, kwargs = mock_request.call_args
         self.assertEqual(kwargs["method"], "GET")
-        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/wikis/123/attachments/456")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/wikis/123/attachments/456/download")
         self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
+    @mock.patch("backlog_backup.api.client.requests.request")
+    def test_get_issue_comments(self, mock_request):
+        """Test the get_issue_comments method uses correct parameters."""
+        # Set up mock
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json.return_value = [{"id": 1, "content": "Test Comment"}]
+        mock_request.return_value = mock_response
+        
+        # Call the method
+        result = self.client.get_issue_comments("TEST-1")
+        
+        # Assertions
+        mock_request.assert_called_once()
+        self.assertEqual(result, [{"id": 1, "content": "Test Comment"}])
+        
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["method"], "GET")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/issues/TEST-1/comments")
+        self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
+    @mock.patch("backlog_backup.api.client.requests.request")
+    def test_get_git_repositories(self, mock_request):
+        """Test the get_git_repositories method uses correct parameters."""
+        # Set up mock
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json.return_value = [{"id": 1, "name": "test-repo"}]
+        mock_request.return_value = mock_response
+        
+        # Call the method
+        result = self.client.get_git_repositories("TEST_PROJECT")
+        
+        # Assertions
+        mock_request.assert_called_once()
+        self.assertEqual(result, [{"id": 1, "name": "test-repo"}])
+        
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["method"], "GET")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/projects/TEST_PROJECT/git/repositories")
+        self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
+    @mock.patch("backlog_backup.api.client.requests.request")
+    def test_get_svn_repositories(self, mock_request):
+        """Test the get_svn_repositories method uses correct parameters."""
+        # Set up mock
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.json.return_value = [{"id": 1, "name": "test-svn"}]
+        mock_request.return_value = mock_response
+        
+        # Call the method
+        result = self.client.get_svn_repositories("TEST_PROJECT")
+        
+        # Assertions
+        mock_request.assert_called_once()
+        self.assertEqual(result, [{"id": 1, "name": "test-svn"}])
+        
+        # Check the parameters
+        args, kwargs = mock_request.call_args
+        self.assertEqual(kwargs["method"], "GET")
+        self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/projects/TEST_PROJECT/svn/repositories")
         self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
 
 if __name__ == "__main__":
