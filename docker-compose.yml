@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  backlog-backup:
+    build: .
+    volumes:
+      - ./backup:/app/backup
+      - ./config:/app/config
+    environment:
+      - TZ=Asia/Tokyo
+    # Example command (replace with your actual parameters)
+    # command: --domain example.backlog.com --api-key YOUR_API_KEY --project PROJECT_KEY --all --output /app/backup
