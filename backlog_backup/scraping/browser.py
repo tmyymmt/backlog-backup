@@ -133,8 +133,9 @@ class BacklogBrowser:
         self._rate_limited_get(files_url)
         
         # Implementation depends on the Backlog file tree structure
-        # This is a placeholder - actual implementation would need to
-        # navigate the file tree and extract file information
+        # Note: This implementation may need to be updated based on the actual
+        # HTML structure of the Backlog file tree. The selectors and attributes
+        # should be verified and adjusted according to the actual HTML.
         
         file_list = []
         try:
@@ -144,6 +145,7 @@ class BacklogBrowser:
             )
             
             # Extract file information
+            # Note: Actual selectors and attributes may vary depending on Backlog's HTML structure
             file_elements = self.driver.find_elements(By.CSS_SELECTOR, ".file-item")
             
             for element in file_elements:
@@ -177,7 +179,7 @@ class BacklogBrowser:
         self._ensure_logged_in()
         
         # Get the download URL
-        download_url = f"{self.base_url}/projects/{project_key}/file/download/{file_path}"
+        download_url = f"{self.base_url}/downloadFile/{project_key}/{file_path}"
         self.logger.info(f"Downloading file: {download_url}")
         
         # Create parent directories if they don't exist
