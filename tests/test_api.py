@@ -84,7 +84,7 @@ class TestBacklogAPIClient(unittest.TestCase):
         self.assertEqual(kwargs["method"], "GET")
         self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/wikis")
         self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
-        self.assertEqual(kwargs["params"]["projectId[]"], "TEST_PROJECT")
+        self.assertEqual(kwargs["params"]["projectIdOrKey"], "TEST_PROJECT")
 
     @mock.patch("backlog_backup.api.client.requests.request")
     def test_download_attachment(self, mock_request):

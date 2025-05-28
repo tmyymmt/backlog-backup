@@ -298,7 +298,7 @@ class BacklogAPIClient:
             List of wiki pages
         """
         endpoint = "/wikis"
-        params = {"projectId[]": project_id_or_key}
+        params = {"projectIdOrKey": project_id_or_key}
         return self.get(endpoint, params=params)
     
     def get_wiki(self, wiki_id: str) -> Dict[str, Any]:
