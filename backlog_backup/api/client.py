@@ -297,8 +297,8 @@ class BacklogAPIClient:
         Returns:
             List of wiki pages
         """
-        endpoint = f"/projects/{project_id_or_key}/wikis"
-        return self.get(endpoint)
+        params = {"projectIdOrKey": project_id_or_key}
+        return self.get("/wikis", params=params)
     
     def get_wiki(self, wiki_id: str) -> Dict[str, Any]:
         """Get wiki page details.
