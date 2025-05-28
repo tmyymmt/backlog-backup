@@ -176,22 +176,52 @@ def backup_project(
     project_output_dir.mkdir(parents=True, exist_ok=True)
     
     try:
+        backup_errors = []
+        
         if backup_issues_flag:
-            backup_issues(domain, api_key, project_key, project_output_dir)
+            try:
+                backup_issues(domain, api_key, project_key, project_output_dir)
+            except Exception as e:
+                error_msg = f"Issues backup failed: {e}"
+                logging.warning(error_msg)
+                backup_errors.append(error_msg)
             
         if backup_wiki_flag:
-            backup_wiki(domain, api_key, project_key, project_output_dir)
+            try:
+                backup_wiki(domain, api_key, project_key, project_output_dir)
+            except Exception as e:
+                error_msg = f"Wiki backup failed: {e}"
+                logging.warning(error_msg)
+                backup_errors.append(error_msg)
             
         if backup_files_flag:
-            backup_files(domain, api_key, project_key, project_output_dir)
+            try:
+                backup_files(domain, api_key, project_key, project_output_dir)
+            except Exception as e:
+                error_msg = f"Files backup failed: {e}"
+                logging.warning(error_msg)
+                backup_errors.append(error_msg)
             
         if backup_git_flag:
-            backup_git(domain, api_key, project_key, project_output_dir)
+            try:
+                backup_git(domain, api_key, project_key, project_output_dir)
+            except Exception as e:
+                error_msg = f"Git backup failed: {e}"
+                logging.warning(error_msg)
+                backup_errors.append(error_msg)
             
         if backup_svn_flag:
-            backup_svn(domain, api_key, project_key, project_output_dir)
-            
-        logging.info(f"Backup for project '{project_key}' completed successfully. Files saved to {project_output_dir}")
+            try:
+                backup_svn(domain, api_key, project_key, project_output_dir)
+            except Exception as e:
+                error_msg = f"SVN backup failed: {e}"
+                logging.warning(error_msg)
+                backup_errors.append(error_msg)
+        
+        if backup_errors:
+            logging.warning(f"Backup for project '{project_key}' completed with warnings: {'; '.join(backup_errors)}. Files saved to {project_output_dir}")
+        else:
+            logging.info(f"Backup for project '{project_key}' completed successfully. Files saved to {project_output_dir}")
             
     except Exception as e:
         logging.error(f"Backup for project '{project_key}' failed: {e}")

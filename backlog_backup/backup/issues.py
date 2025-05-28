@@ -115,11 +115,15 @@ def backup_issues(domain: str, api_key: str, project_key: str, output_dir: Path)
                     
                     logger.info(f"Downloading attachment {attachment_name} for issue {issue_key}")
                     
-                    attachment_content = client.download_attachment(issue_key, attachment_id)
-                    attachment_path = issue_attachments_dir / attachment_name
-                    
-                    with open(attachment_path, "wb") as f:
-                        f.write(attachment_content)
+                    try:
+                        attachment_content = client.download_attachment(issue_key, attachment_id)
+                        attachment_path = issue_attachments_dir / attachment_name
+                        
+                        with open(attachment_path, "wb") as f:
+                            f.write(attachment_content)
+                    except Exception as attachment_error:
+                        logger.warning(f"Failed to download attachment {attachment_name} for issue {issue_key}: {attachment_error}")
+                        # Continue with other attachments
         
         logger.info(f"Issues backup completed: {issue_list_path}")
         

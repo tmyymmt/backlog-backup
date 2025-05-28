@@ -190,6 +190,18 @@ class BacklogAPIClient:
         endpoint = f"/projects/{project_id_or_key}"
         return self.get(endpoint)
     
+    def _get_project_id(self, project_key: str) -> int:
+        """Get project ID from project key.
+        
+        Args:
+            project_key: Project key
+            
+        Returns:
+            Project ID as integer
+        """
+        project_info = self.get_project(project_key)
+        return project_info["id"]
+    
     def get_issues(
         self, 
         project_id_or_key: str, 
@@ -206,8 +218,14 @@ class BacklogAPIClient:
         """
         if params is None:
             params = {}
+        
+        # If project_id_or_key is not a number, treat it as a project key and get the ID
+        if not project_id_or_key.isdigit():
+            project_id = self._get_project_id(project_id_or_key)
+        else:
+            project_id = int(project_id_or_key)
             
-        params["projectId[]"] = project_id_or_key
+        params["projectId[]"] = project_id
         return self.get("/issues", params=params)
     
     def get_issue(self, issue_id_or_key: str) -> Dict[str, Any]:
@@ -259,10 +277,16 @@ class BacklogAPIClient:
             attachment_id: Attachment ID
             
         Returns:
-            Attachment content
+            Attachment content as bytes
         """
         endpoint = f"/issues/{issue_id_or_key}/attachments/{attachment_id}/download"
-        return self.get(endpoint)
+        # Use _make_request directly to handle binary content properly
+        response_content = self._make_request("GET", endpoint)
+        if isinstance(response_content, bytes):
+            return response_content
+        else:
+            # If it returns a JSON response (error case), raise an error
+            raise ValueError(f"Expected binary content for attachment download, got: {type(response_content)}")
     
     def get_wikis(self, project_id_or_key: str) -> List[Dict[str, Any]]:
         """Get wiki pages in a project.
@@ -273,8 +297,8 @@ class BacklogAPIClient:
         Returns:
             List of wiki pages
         """
-        params = {"projectId[]": project_id_or_key}
-        return self.get("/wikis", params=params)
+        endpoint = f"/projects/{project_id_or_key}/wikis"
+        return self.get(endpoint)
     
     def get_wiki(self, wiki_id: str) -> Dict[str, Any]:
         """Get wiki page details.

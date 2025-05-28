@@ -1,0 +1,259 @@
+{
+  "issue": {
+    "id": 107832528,
+    "projectId": 642618,
+    "issueKey": "PROJECT1-1",
+    "keyId": 1,
+    "issueType": {
+      "id": 3404547,
+      "projectId": 642618,
+      "name": "タスク",
+      "color": "#7ea800",
+      "displayOrder": 0
+    },
+    "summary": "課題サンプル1",
+    "description": "課題サンプル1の詳細",
+    "resolution": null,
+    "priority": {
+      "id": 3,
+      "name": "中"
+    },
+    "status": {
+      "id": 2,
+      "projectId": 642618,
+      "name": "処理中",
+      "color": "#4488c5",
+      "displayOrder": 2000
+    },
+    "assignee": {
+      "id": 1961569,
+      "userId": "SOv0v6HWYm",
+      "name": "山本智世",
+      "roleType": 1,
+      "lang": "ja",
+      "mailAddress": "tmyymmt@gmail.com",
+      "nulabAccount": {
+        "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+        "name": "山本智世",
+        "uniqueId": "tmyymmt",
+        "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+      },
+      "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+      "lastLoginTime": "2025-05-28T12:57:49Z"
+    },
+    "category": [
+      {
+        "id": 1730716,
+        "projectId": 642618,
+        "name": "カテゴリ1",
+        "displayOrder": 2147483646
+      },
+      {
+        "id": 1730717,
+        "projectId": 642618,
+        "name": "カテゴリ2",
+        "displayOrder": 2147483646
+      }
+    ],
+    "versions": [],
+    "milestone": [],
+    "startDate": null,
+    "dueDate": "2025-05-30T00:00:00Z",
+    "estimatedHours": null,
+    "actualHours": null,
+    "parentIssueId": null,
+    "createdUser": {
+      "id": 1961569,
+      "userId": "SOv0v6HWYm",
+      "name": "山本智世",
+      "roleType": 1,
+      "lang": "ja",
+      "mailAddress": "tmyymmt@gmail.com",
+      "nulabAccount": {
+        "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+        "name": "山本智世",
+        "uniqueId": "tmyymmt",
+        "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+      },
+      "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+      "lastLoginTime": "2025-05-28T12:57:49Z"
+    },
+    "created": "2025-05-26T02:43:58Z",
+    "updatedUser": {
+      "id": 1961569,
+      "userId": "SOv0v6HWYm",
+      "name": "山本智世",
+      "roleType": 1,
+      "lang": "ja",
+      "mailAddress": "tmyymmt@gmail.com",
+      "nulabAccount": {
+        "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+        "name": "山本智世",
+        "uniqueId": "tmyymmt",
+        "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+      },
+      "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+      "lastLoginTime": "2025-05-28T12:57:49Z"
+    },
+    "updated": "2025-05-26T02:44:20Z",
+    "customFields": [],
+    "attachments": [
+      {
+        "id": 55670095,
+        "name": "file_sample1.txt",
+        "size": 15,
+        "createdUser": {
+          "id": 1961569,
+          "userId": "SOv0v6HWYm",
+          "name": "山本智世",
+          "roleType": 1,
+          "lang": "ja",
+          "mailAddress": "tmyymmt@gmail.com",
+          "nulabAccount": {
+            "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+            "name": "山本智世",
+            "uniqueId": "tmyymmt",
+            "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+          },
+          "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+          "lastLoginTime": "2025-05-28T12:57:49Z"
+        },
+        "created": "2025-05-26T02:43:58Z"
+      }
+    ],
+    "sharedFiles": [],
+    "externalFileLinks": [],
+    "stars": []
+  },
+  "comments": [
+    {
+      "id": 546181024,
+      "projectId": 642618,
+      "issueId": 107832528,
+      "content": null,
+      "changeLog": [
+        {
+          "field": "status",
+          "newValue": "処理中",
+          "originalValue": "未対応",
+          "attachmentInfo": null,
+          "attributeInfo": null,
+          "notificationInfo": null
+        }
+      ],
+      "createdUser": {
+        "id": 1961569,
+        "userId": "SOv0v6HWYm",
+        "name": "山本智世",
+        "roleType": 1,
+        "lang": "ja",
+        "mailAddress": "tmyymmt@gmail.com",
+        "nulabAccount": {
+          "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+          "name": "山本智世",
+          "uniqueId": "tmyymmt",
+          "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+        },
+        "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+        "lastLoginTime": "2025-05-28T12:57:49Z"
+      },
+      "created": "2025-05-26T02:44:20Z",
+      "updated": "2025-05-26T02:44:20Z",
+      "stars": [],
+      "notifications": []
+    },
+    {
+      "id": 546180899,
+      "projectId": 642618,
+      "issueId": 107832528,
+      "content": "コメント2",
+      "changeLog": [],
+      "createdUser": {
+        "id": 1961569,
+        "userId": "SOv0v6HWYm",
+        "name": "山本智世",
+        "roleType": 1,
+        "lang": "ja",
+        "mailAddress": "tmyymmt@gmail.com",
+        "nulabAccount": {
+          "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+          "name": "山本智世",
+          "uniqueId": "tmyymmt",
+          "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+        },
+        "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+        "lastLoginTime": "2025-05-28T12:57:49Z"
+      },
+      "created": "2025-05-26T02:44:13Z",
+      "updated": "2025-05-26T02:44:13Z",
+      "stars": [],
+      "notifications": []
+    },
+    {
+      "id": 546180827,
+      "projectId": 642618,
+      "issueId": 107832528,
+      "content": "コメント1",
+      "changeLog": [],
+      "createdUser": {
+        "id": 1961569,
+        "userId": "SOv0v6HWYm",
+        "name": "山本智世",
+        "roleType": 1,
+        "lang": "ja",
+        "mailAddress": "tmyymmt@gmail.com",
+        "nulabAccount": {
+          "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+          "name": "山本智世",
+          "uniqueId": "tmyymmt",
+          "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+        },
+        "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+        "lastLoginTime": "2025-05-28T12:57:49Z"
+      },
+      "created": "2025-05-26T02:44:09Z",
+      "updated": "2025-05-26T02:44:09Z",
+      "stars": [],
+      "notifications": []
+    },
+    {
+      "id": 546180598,
+      "projectId": 642618,
+      "issueId": 107832528,
+      "content": null,
+      "changeLog": [
+        {
+          "field": "attachment",
+          "newValue": "file_sample1.txt",
+          "originalValue": null,
+          "attachmentInfo": {
+            "id": 55670095,
+            "name": "file_sample1.txt"
+          },
+          "attributeInfo": null,
+          "notificationInfo": null
+        }
+      ],
+      "createdUser": {
+        "id": 1961569,
+        "userId": "SOv0v6HWYm",
+        "name": "山本智世",
+        "roleType": 1,
+        "lang": "ja",
+        "mailAddress": "tmyymmt@gmail.com",
+        "nulabAccount": {
+          "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+          "name": "山本智世",
+          "uniqueId": "tmyymmt",
+          "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+        },
+        "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+        "lastLoginTime": "2025-05-28T12:57:49Z"
+      },
+      "created": "2025-05-26T02:43:58Z",
+      "updated": "2025-05-26T02:43:58Z",
+      "stars": [],
+      "notifications": []
+    }
+  ]
+}
