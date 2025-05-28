@@ -41,26 +41,34 @@ class TestBacklogAPIClient(unittest.TestCase):
     @mock.patch("backlog_backup.api.client.requests.request")
     def test_get_issues(self, mock_request):
         """Test the get_issues method uses correct parameters."""
-        # Set up mock
-        mock_response = mock.Mock()
-        mock_response.status_code = 200
-        mock_response.headers = {"Content-Type": "application/json"}
-        mock_response.json.return_value = [{"id": 1, "summary": "Test Issue"}]
-        mock_request.return_value = mock_response
+        # Set up mock for get_project call
+        mock_response_project = mock.Mock()
+        mock_response_project.status_code = 200
+        mock_response_project.headers = {"Content-Type": "application/json"}
+        mock_response_project.json.return_value = {"id": 123, "projectKey": "TEST_PROJECT"}
+        
+        # Set up mock for get_issues call
+        mock_response_issues = mock.Mock()
+        mock_response_issues.status_code = 200
+        mock_response_issues.headers = {"Content-Type": "application/json"}
+        mock_response_issues.json.return_value = [{"id": 1, "summary": "Test Issue"}]
+        
+        # Mock will be called twice: once for get_project, once for get_issues
+        mock_request.side_effect = [mock_response_project, mock_response_issues]
         
         # Call the method
         result = self.client.get_issues("TEST_PROJECT")
         
         # Assertions
-        mock_request.assert_called_once()
+        self.assertEqual(mock_request.call_count, 2)
         self.assertEqual(result, [{"id": 1, "summary": "Test Issue"}])
         
-        # Check the parameters
-        args, kwargs = mock_request.call_args
+        # Check the second call (issues call) parameters
+        args, kwargs = mock_request.call_args_list[1]
         self.assertEqual(kwargs["method"], "GET")
         self.assertEqual(kwargs["url"], f"https://{self.domain}/api/v2/issues")
         self.assertEqual(kwargs["params"]["apiKey"], self.api_key)
-        self.assertEqual(kwargs["params"]["projectId[]"], "TEST_PROJECT")
+        self.assertEqual(kwargs["params"]["projectId[]"], 123)
         
     @mock.patch("backlog_backup.api.client.requests.request")
     def test_get_wikis(self, mock_request):

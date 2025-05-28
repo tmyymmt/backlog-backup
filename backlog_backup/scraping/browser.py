@@ -4,6 +4,8 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 import os
+from pathlib import Path
+import requests
 
 # Import optional dependencies - will be installed in Dockerfile
 try:
@@ -131,8 +133,9 @@ class BacklogBrowser:
         self._rate_limited_get(files_url)
         
         # Implementation depends on the Backlog file tree structure
-        # This is a placeholder - actual implementation would need to
-        # navigate the file tree and extract file information
+        # Note: This implementation may need to be updated based on the actual
+        # HTML structure of the Backlog file tree. The selectors and attributes
+        # should be verified and adjusted according to the actual HTML.
         
         file_list = []
         try:
@@ -142,6 +145,7 @@ class BacklogBrowser:
             )
             
             # Extract file information
+            # Note: Actual selectors and attributes may vary depending on Backlog's HTML structure
             file_elements = self.driver.find_elements(By.CSS_SELECTOR, ".file-item")
             
             for element in file_elements:
@@ -168,14 +172,44 @@ class BacklogBrowser:
         Raises:
             ValueError: If download fails
         """
-        # Implementation depends on Backlog's file download mechanism
-        # This is a placeholder
+        import requests
+        from pathlib import Path
         
-        download_url = f"{self.base_url}/projects/{project_key}/files/download/{file_path}"
+        # Ensure we're logged in for cookie-based auth
+        self._ensure_logged_in()
+        
+        # Get the download URL
+        download_url = f"{self.base_url}/downloadFile/{project_key}/{file_path}"
         self.logger.info(f"Downloading file: {download_url}")
         
-        # Actual implementation would handle the download process
-        # and save the file to output_path
+        # Create parent directories if they don't exist
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            # Get cookies from Selenium session
+            cookies = {cookie['name']: cookie['value'] for cookie in self.driver.get_cookies()}
+            
+            # Download the file using requests with the session cookies
+            with requests.get(download_url, cookies=cookies, stream=True, timeout=60) as response:
+                response.raise_for_status()
+                with open(output_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            
+            self.logger.info(f"File downloaded successfully to {output_path}")
+        except Exception as e:
+            self.logger.error(f"Failed to download file {file_path}: {e}")
+            raise ValueError(f"File download failed: {e}")
+    
+    def _ensure_logged_in(self) -> None:
+        """Ensure we are still logged in, attempt to re-login if needed."""
+        # Check if we are logged in by looking for a specific element
+        try:
+            # Look for an element that indicates we're logged in
+            self.driver.find_element(By.CLASS_NAME, "user-icon")
+        except NoSuchElementException:
+            self.logger.warning("Session expired, re-logging in")
+            self._login()
         
     def close(self) -> None:
         """Close the browser."""

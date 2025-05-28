@@ -297,9 +297,8 @@ class BacklogAPIClient:
         Returns:
             List of wiki pages
         """
-        endpoint = "/wikis"
         params = {"projectIdOrKey": project_id_or_key}
-        return self.get(endpoint, params=params)
+        return self.get("/wikis", params=params)
     
     def get_wiki(self, wiki_id: str) -> Dict[str, Any]:
         """Get wiki page details.
@@ -333,10 +332,16 @@ class BacklogAPIClient:
             attachment_id: Attachment ID
             
         Returns:
-            Attachment content
+            Attachment content as bytes
         """
         endpoint = f"/wikis/{wiki_id}/attachments/{attachment_id}/download"
-        return self.get(endpoint)
+        # Use _make_request directly to handle binary content properly
+        response_content = self._make_request("GET", endpoint)
+        if isinstance(response_content, bytes):
+            return response_content
+        else:
+            # If it returns a JSON response (error case), raise an error
+            raise ValueError(f"Expected binary content for wiki attachment download, got: {type(response_content)}")
     
     def get_git_repositories(self, project_id_or_key: str) -> List[Dict[str, Any]]:
         """Get Git repositories in a project.
