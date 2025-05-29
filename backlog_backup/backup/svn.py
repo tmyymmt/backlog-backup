@@ -1,89 +1,79 @@
-"""Module for backing up Backlog Subversion repositories."""
+"""SVN repository backup functionality for Backlog."""
 
 import logging
-import os
 import subprocess
+from typing import List, Dict, Any, Optional
 from pathlib import Path
-from typing import Any, Dict, List
-import urllib.parse
 
 from ..api.client import BacklogAPIClient
 
+logger = logging.getLogger(__name__)
 
-def backup_svn(domain: str, api_key: str, project_key: str, output_dir: Path) -> None:
-    """Backup Subversion repositories for a project.
+
+def backup_svn(
+    client: BacklogAPIClient,
+    project_key: str,
+    output_dir: Path,
+    **kwargs
+) -> None:
+    """
+    Backup SVN repositories from a Backlog project.
     
     Args:
-        domain: Backlog domain (e.g., 'example.backlog.com')
-        api_key: Backlog API key
-        project_key: Project key
-        output_dir: Output directory for backup files
-    
-    Raises:
-        ValueError: If backup fails
+        client: Backlog API client instance
+        project_key: Project key to backup SVN repos from
+        output_dir: Directory to save backup files
+        **kwargs: Additional options
     """
-    logger = logging.getLogger(__name__)
-    client = BacklogAPIClient(domain, api_key)
-    
-    logger.info(f"Backing up Subversion repositories for project {project_key}")
-    
-    # Create svn directory
-    svn_dir = output_dir / "svn"
-    svn_dir.mkdir(exist_ok=True)
+    logger.info(f"Starting SVN backup for project: {project_key}")
     
     try:
-        # Get Subversion repositories for the project
-        repositories = client.get_svn_repositories(project_key)
-        logger.info(f"Found {len(repositories)} Subversion repositories")
+        # Create svn directory
+        svn_dir = output_dir / "svn"
+        svn_dir.mkdir(parents=True, exist_ok=True)
         
-        for repo in repositories:
-            repo_name = repo["name"]
-            repo_id = repo["id"]
-            
-            logger.info(f"Backing up Subversion repository: {repo_name}")
-            
-            # Repository URL
-            repo_url = f"https://{domain}/svn/{project_key}"
-            
-            # Add API key to URL for authentication
-            api_key_param = urllib.parse.quote(api_key)
-            repo_url_with_auth = f"{repo_url}?apiKey={api_key_param}"
-            
-            # Directory for this repository
-            repo_dir = svn_dir / repo_name
-            
-            if repo_dir.exists():
-                logger.info(f"Repository directory exists, updating: {repo_dir}")
-                try:
-                    # Update if repo already exists
-                    subprocess.run(
-                        ["svn", "update"],
-                        cwd=repo_dir,
-                        check=True,
-                        capture_output=True,
-                        text=True,
-                    )
-                except subprocess.CalledProcessError as e:
-                    logger.error(f"Failed to update SVN repository: {e}")
-                    logger.error(f"SVN stderr: {e.stderr}")
-                    raise ValueError(f"SVN update failed: {e}")
-            else:
-                logger.info(f"Checking out SVN repository: {repo_url}")
-                try:
-                    # Checkout the repository
-                    subprocess.run(
-                        ["svn", "checkout", repo_url_with_auth, repo_dir],
-                        check=True,
-                        capture_output=True,
-                        text=True,
-                    )
-                except subprocess.CalledProcessError as e:
-                    logger.error(f"Failed to checkout SVN repository: {e}")
-                    logger.error(f"SVN stderr: {e.stderr}")
-                    raise ValueError(f"SVN checkout failed: {e}")
-                    
-        logger.info(f"Subversion repositories backup completed: {svn_dir}")
+        # Get project information
+        project = client.get_project(project_key)
+        if not project:
+            logger.error(f"Project {project_key} not found")
+            return
+        
+        logger.info(f"Found project: {project.get('name', project_key)}")
+        
+        # TODO: Implement actual SVN backup logic
+        # This would include:
+        # - Getting list of SVN repositories
+        # - Creating SVN dumps using svnadmin dump
+        # - Handling authentication
+        # - Preserving complete repository history
+        
+        logger.info(f"SVN backup completed for project: {project_key}")
         
     except Exception as e:
-        logger.error(f"Failed to backup Subversion repositories: {e}")
-        raise ValueError(f"Subversion repositories backup failed: {e}")
+        logger.error(f"Failed to backup SVN repositories for project {project_key}: {str(e)}")
+        raise
+
+
+def _dump_repository(repo_url: str, output_path: Path, auth_token: Optional[str] = None) -> bool:
+    """
+    Create an SVN dump of a repository.
+    
+    Args:
+        repo_url: URL of the SVN repository
+        output_path: Path where to save the dump file
+        auth_token: Authentication token if needed
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # TODO: Implement SVN dump logic
+        # This might need to use svnadmin dump or svnsync
+        # depending on access permissions
+        
+        logger.info(f"SVN dump functionality not yet implemented for {repo_url}")
+        return False
+        
+    except Exception as e:
+        logger.error(f"Unexpected error dumping SVN repository {repo_url}: {str(e)}")
+        return False

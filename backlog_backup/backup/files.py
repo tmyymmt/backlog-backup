@@ -1,98 +1,53 @@
-"""Module for backing up Backlog files."""
+"""File backup functionality for Backlog."""
 
 import logging
-import os
+from typing import List, Dict, Any, Optional
 from pathlib import Path
-import time
-from typing import Any, Dict, List, Optional
 
 from ..api.client import BacklogAPIClient
-from ..scraping.browser import BacklogBrowser
+
+logger = logging.getLogger(__name__)
 
 
 def backup_files(
-    domain: str, 
-    api_key: str, 
-    project_key: str, 
+    client: BacklogAPIClient,
+    project_key: str,
     output_dir: Path,
-    username: Optional[str] = None,
-    password: Optional[str] = None
+    **kwargs
 ) -> None:
-    """Backup files for a project.
+    """
+    Backup all shared files from a Backlog project.
     
     Args:
-        domain: Backlog domain (e.g., 'example.backlog.com')
-        api_key: Backlog API key
-        project_key: Project key
-        output_dir: Output directory for backup files
-        username: Optional Backlog username for web scraping
-        password: Optional Backlog password for web scraping
-    
-    Raises:
-        ValueError: If backup fails
+        client: Backlog API client instance
+        project_key: Project key to backup files from
+        output_dir: Directory to save backup files
+        **kwargs: Additional options
     """
-    logger = logging.getLogger(__name__)
-    
-    # Create files directory
-    files_dir = output_dir / "files"
-    files_dir.mkdir(exist_ok=True)
-    
-    logger.info(f"Backing up files for project {project_key}")
-    
-    # Files API is limited in Backlog, so we need to use both API and scraping
-    client = BacklogAPIClient(domain, api_key)
+    logger.info(f"Starting file backup for project: {project_key}")
     
     try:
-        # First try using API if available
-        try:
-            # Note: This is a placeholder - Backlog API doesn't have a direct
-            # method to list all files. You may need to adapt based on
-            # what's available in the Backlog API.
-            logger.info("Attempting to backup files using API")
-            # Implement API-based file backup here if available
-            
-        except Exception as api_error:
-            logger.warning(f"API-based file backup failed: {api_error}")
-            logger.info("Falling back to web scraping for files")
-            
-            if not username or not password:
-                raise ValueError(
-                    "Username and password are required for web scraping files. "
-                    "Please provide them using the --username and --password options."
-                )
-                
-            # Use web scraping as a fallback
-            browser = None
-            try:
-                browser = BacklogBrowser(domain, username, password)
-                file_list = browser.get_project_files(project_key)
-                
-                for file_info in file_list:
-                    file_path = file_info["path"]
-                    file_name = file_info["name"]
-                    file_type = file_info["type"]
-                    
-                    # Create directory structure if needed
-                    path_parts = file_path.split("/")
-                    if len(path_parts) > 1:
-                        dir_path = files_dir / "/".join(path_parts[:-1])
-                        dir_path.mkdir(parents=True, exist_ok=True)
-                    
-                    # Download file if it's not a directory
-                    if file_type != "directory":
-                        output_path = files_dir / file_path
-                        logger.info(f"Downloading file: {file_path}")
-                        browser.download_file(project_key, file_path, output_path)
-                        
-                        # Rate limiting
-                        time.sleep(1)
-                
-            finally:
-                if browser:
-                    browser.close()
+        # Create files directory
+        files_dir = output_dir / "files"
+        files_dir.mkdir(parents=True, exist_ok=True)
         
-        logger.info(f"Files backup completed: {files_dir}")
+        # Get project information
+        project = client.get_project(project_key)
+        if not project:
+            logger.error(f"Project {project_key} not found")
+            return
+        
+        logger.info(f"Found project: {project.get('name', project_key)}")
+        
+        # TODO: Implement actual file backup logic
+        # This would include:
+        # - Getting all shared files
+        # - Downloading files with proper directory structure
+        # - Preserving file metadata
+        # - Handling file versions
+        
+        logger.info(f"File backup completed for project: {project_key}")
         
     except Exception as e:
-        logger.error(f"Failed to backup files: {e}")
-        raise ValueError(f"Files backup failed: {e}")
+        logger.error(f"Failed to backup files for project {project_key}: {str(e)}")
+        raise

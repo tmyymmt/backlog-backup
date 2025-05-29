@@ -175,12 +175,15 @@ def backup_project(
     project_output_dir = output_dir / project_key
     project_output_dir.mkdir(parents=True, exist_ok=True)
     
+    # Create API client instance
+    client = BacklogAPIClient(domain, api_key)
+    
     try:
         backup_errors = []
         
         if backup_issues_flag:
             try:
-                backup_issues(domain, api_key, project_key, project_output_dir)
+                backup_issues(client, project_key, project_output_dir)
             except Exception as e:
                 error_msg = f"Issues backup failed: {e}"
                 logging.warning(error_msg)
@@ -188,7 +191,7 @@ def backup_project(
             
         if backup_wiki_flag:
             try:
-                backup_wiki(domain, api_key, project_key, project_output_dir)
+                backup_wiki(client, project_key, project_output_dir)
             except Exception as e:
                 error_msg = f"Wiki backup failed: {e}"
                 logging.warning(error_msg)
@@ -196,7 +199,7 @@ def backup_project(
             
         if backup_files_flag:
             try:
-                backup_files(domain, api_key, project_key, project_output_dir)
+                backup_files(client, project_key, project_output_dir)
             except Exception as e:
                 error_msg = f"Files backup failed: {e}"
                 logging.warning(error_msg)
@@ -204,7 +207,7 @@ def backup_project(
             
         if backup_git_flag:
             try:
-                backup_git(domain, api_key, project_key, project_output_dir)
+                backup_git(client, project_key, project_output_dir)
             except Exception as e:
                 error_msg = f"Git backup failed: {e}"
                 logging.warning(error_msg)
@@ -212,7 +215,7 @@ def backup_project(
             
         if backup_svn_flag:
             try:
-                backup_svn(domain, api_key, project_key, project_output_dir)
+                backup_svn(client, project_key, project_output_dir)
             except Exception as e:
                 error_msg = f"SVN backup failed: {e}"
                 logging.warning(error_msg)

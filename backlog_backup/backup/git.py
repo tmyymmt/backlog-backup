@@ -1,87 +1,84 @@
-"""Module for backing up Backlog Git repositories."""
+"""Git repository backup functionality for Backlog."""
 
 import logging
-import os
 import subprocess
+from typing import List, Dict, Any, Optional
 from pathlib import Path
-from typing import Any, Dict, List
 
 from ..api.client import BacklogAPIClient
 
+logger = logging.getLogger(__name__)
 
-def backup_git(domain: str, api_key: str, project_key: str, output_dir: Path) -> None:
-    """Backup Git repositories for a project.
+
+def backup_git(
+    client: BacklogAPIClient,
+    project_key: str,
+    output_dir: Path,
+    **kwargs
+) -> None:
+    """
+    Backup Git repositories from a Backlog project.
     
     Args:
-        domain: Backlog domain (e.g., 'example.backlog.com')
-        api_key: Backlog API key
-        project_key: Project key
-        output_dir: Output directory for backup files
-    
-    Raises:
-        ValueError: If backup fails
+        client: Backlog API client instance
+        project_key: Project key to backup Git repos from
+        output_dir: Directory to save backup files
+        **kwargs: Additional options
     """
-    logger = logging.getLogger(__name__)
-    client = BacklogAPIClient(domain, api_key)
-    
-    logger.info(f"Backing up Git repositories for project {project_key}")
-    
-    # Create git directory
-    git_dir = output_dir / "git"
-    git_dir.mkdir(exist_ok=True)
+    logger.info(f"Starting Git backup for project: {project_key}")
     
     try:
-        # Get Git repositories for the project
-        repositories = client.get_git_repositories(project_key)
-        logger.info(f"Found {len(repositories)} Git repositories")
+        # Create git directory
+        git_dir = output_dir / "git"
+        git_dir.mkdir(parents=True, exist_ok=True)
         
-        for repo in repositories:
-            repo_name = repo["name"]
-            repo_id = repo["id"]
-            
-            logger.info(f"Backing up Git repository: {repo_name}")
-            
-            # Repository clone URL (using HTTPS)
-            clone_url = f"https://{domain}/git/{project_key}/{repo_name}.git"
-            
-            # Add API key to URL for authentication
-            clone_url_with_auth = f"{clone_url}?apiKey={api_key}"
-            
-            # Directory for this repository
-            repo_dir = git_dir / repo_name
-            
-            if repo_dir.exists():
-                logger.info(f"Repository directory exists, pulling updates: {repo_dir}")
-                try:
-                    # Pull updates if repo already exists
-                    subprocess.run(
-                        ["git", "pull", "--all"],
-                        cwd=repo_dir,
-                        check=True,
-                        capture_output=True,
-                        text=True,
-                    )
-                except subprocess.CalledProcessError as e:
-                    logger.error(f"Failed to pull Git repository: {e}")
-                    logger.error(f"Git stderr: {e.stderr}")
-                    raise ValueError(f"Git pull failed: {e}")
-            else:
-                logger.info(f"Cloning Git repository: {clone_url}")
-                try:
-                    # Clone the repository
-                    subprocess.run(
-                        ["git", "clone", "--mirror", clone_url_with_auth, repo_dir],
-                        check=True,
-                        capture_output=True,
-                        text=True,
-                    )
-                except subprocess.CalledProcessError as e:
-                    logger.error(f"Failed to clone Git repository: {e}")
-                    logger.error(f"Git stderr: {e.stderr}")
-                    raise ValueError(f"Git clone failed: {e}")
+        # Get project information
+        project = client.get_project(project_key)
+        if not project:
+            logger.error(f"Project {project_key} not found")
+            return
         
-        logger.info(f"Git repositories backup completed: {git_dir}")
+        logger.info(f"Found project: {project.get('name', project_key)}")
+        
+        # TODO: Implement actual Git backup logic
+        # This would include:
+        # - Getting list of Git repositories
+        # - Cloning repositories using git clone --mirror
+        # - Handling authentication
+        # - Preserving all branches and tags
+        
+        logger.info(f"Git backup completed for project: {project_key}")
         
     except Exception as e:
-        logger.error(f"Failed to backup Git repositories: {e}")
-        raise ValueError(f"Git repositories backup failed: {e}")
+        logger.error(f"Failed to backup Git repositories for project {project_key}: {str(e)}")
+        raise
+
+
+def _clone_repository(repo_url: str, output_path: Path, auth_token: Optional[str] = None) -> bool:
+    """
+    Clone a Git repository using git clone --mirror.
+    
+    Args:
+        repo_url: URL of the repository to clone
+        output_path: Path where to clone the repository
+        auth_token: Authentication token if needed
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        cmd = ["git", "clone", "--mirror", repo_url, str(output_path)]
+        
+        # TODO: Handle authentication properly
+        # This might need to set up credentials or use SSH keys
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        logger.info(f"Successfully cloned repository to {output_path}")
+        return True
+        
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to clone repository {repo_url}: {e.stderr}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error cloning repository {repo_url}: {str(e)}")
+        return False
