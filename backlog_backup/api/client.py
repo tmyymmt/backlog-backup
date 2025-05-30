@@ -279,7 +279,7 @@ class BacklogAPIClient:
         Returns:
             Attachment content as bytes
         """
-        endpoint = f"/issues/{issue_id_or_key}/attachments/{attachment_id}/download"
+        endpoint = f"/issues/{issue_id_or_key}/attachments/{attachment_id}"
         # Use _make_request directly to handle binary content properly
         response_content = self._make_request("GET", endpoint)
         if isinstance(response_content, bytes):
@@ -366,3 +366,43 @@ class BacklogAPIClient:
         """
         endpoint = f"/projects/{project_id_or_key}/svn/repositories"
         return self.get(endpoint)
+    
+    def get_shared_files(
+        self, 
+        project_id_or_key: str,
+        path: str = "/",
+        params: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
+        """Get shared files in a project.
+        
+        Args:
+            project_id_or_key: Project ID or key
+            path: Directory path (default: root directory "/")
+            params: Additional query parameters
+            
+        Returns:
+            List of shared files and directories
+        """
+        if params is None:
+            params = {}
+        
+        params["path"] = path
+        endpoint = f"/projects/{project_id_or_key}/files/metadata"
+        return self.get(endpoint, params=params)
+    
+    def download_shared_file(self, project_id_or_key: str, file_id: str) -> bytes:
+        """Download a shared file.
+        
+        Args:
+            project_id_or_key: Project ID or key
+            file_id: File ID
+            
+        Returns:
+            File content as bytes
+        """
+        endpoint = f"/projects/{project_id_or_key}/files/{file_id}"
+        response_content = self._make_request("GET", endpoint)
+        if isinstance(response_content, bytes):
+            return response_content
+        else:
+            raise ValueError(f"Expected binary content for file download, got: {type(response_content)}")
