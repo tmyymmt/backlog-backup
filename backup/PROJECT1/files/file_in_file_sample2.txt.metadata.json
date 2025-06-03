@@ -1,0 +1,27 @@
+{
+  "id": 57042112,
+  "projectId": 642618,
+  "type": "file",
+  "dir": "/",
+  "name": "file_in_file_sample2.txt",
+  "size": 41,
+  "createdUser": {
+    "id": 1961569,
+    "userId": "SOv0v6HWYm",
+    "name": "山本智世",
+    "roleType": 1,
+    "lang": "ja",
+    "mailAddress": "tmyymmt@gmail.com",
+    "nulabAccount": {
+      "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+      "name": "山本智世",
+      "uniqueId": "tmyymmt",
+      "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+    },
+    "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+    "lastLoginTime": "2025-06-03T13:01:34Z"
+  },
+  "created": "2025-05-26T03:00:44Z",
+  "updatedUser": null,
+  "updated": "2025-05-26T03:00:44Z"
+}

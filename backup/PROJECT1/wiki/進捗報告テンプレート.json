@@ -1,0 +1,44 @@
+{
+  "id": 4478867,
+  "projectId": 642618,
+  "name": "進捗報告テンプレート",
+  "content": "# 週次進捗ミーティング - [チーム名を入れてください]\n\n## [日付を入れてください]\n\n### 参加者 - [参加者を入れてください]\n\n### 前回までのタスク\n\n概要|優先度|期限日|担当者|状態|現在の状況\n------------- | -------------\n[タスクの内容] |中|[日付]|[担当者]|[状態]|[現在の状況]|\n[タスクの内容] |中|[日付]|[担当者]|[状態]|[現在の状況]|\n\n### 新しいタスク \n概要|優先度|期限日|担当者|状態|更新\n------------- | -------------\n[タスクの内容] |中|[日付]|[担当者]|[状態]|[現在の状況]|\n[タスクの内容] |中|[日付]|[担当者]|[状態]|[現在の状況]|\n\n### 決定事項\n\n* [決定した事項を書いてください]\n",
+  "tags": [],
+  "attachments": [],
+  "sharedFiles": [],
+  "stars": [],
+  "createdUser": {
+    "id": 1961569,
+    "userId": "SOv0v6HWYm",
+    "name": "山本智世",
+    "roleType": 1,
+    "lang": "ja",
+    "mailAddress": "tmyymmt@gmail.com",
+    "nulabAccount": {
+      "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+      "name": "山本智世",
+      "uniqueId": "tmyymmt",
+      "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+    },
+    "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+    "lastLoginTime": "2025-06-03T13:01:34Z"
+  },
+  "created": "2025-05-25T06:10:04Z",
+  "updatedUser": {
+    "id": 1961569,
+    "userId": "SOv0v6HWYm",
+    "name": "山本智世",
+    "roleType": 1,
+    "lang": "ja",
+    "mailAddress": "tmyymmt@gmail.com",
+    "nulabAccount": {
+      "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+      "name": "山本智世",
+      "uniqueId": "tmyymmt",
+      "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+    },
+    "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+    "lastLoginTime": "2025-06-03T13:01:34Z"
+  },
+  "updated": "2025-05-25T06:10:04Z"
+}

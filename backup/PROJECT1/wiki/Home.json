@@ -1,0 +1,44 @@
+{
+  "id": 4478864,
+  "projectId": 642618,
+  "name": "Home",
+  "content": "# BacklogのWikiへようこそ！\nWikiを利用することで複数のユーザーでドキュメントを編集し、記録を残していくことができます。\nプロジェクトの概要や必要な情報をWikiの最初のページにまとめておけば、新しいメンバーがスムーズにプロジェクトに参加できるようになるでしょう。\n\n以下のようなドキュメントを作ってみましょう！\n\n入門サイト、[サル先生の Wiki 入門 〜チームの情報を共有しよう〜](https://backlog.com/ja/wiki-guide/)では、Wiki についての一般的な知識と、実業務で使うための操作方法を学ぶことができます。\n\n# このプロジェクトの概要\nプロジェクトの簡単な説明を記載します。\n\n# 期間\nおおまかなスケジュールや重要なイベント、最終的な期限を記載します。\n\n# 事前準備\nこのプロジェクトに参加する方は、以下の事前準備を行ってください。\n\n* 概要説明を受ける\n* 各種アカウントを発行する\n* 環境を構築する\n    * 手順1\n    * 手順2\n\n# 運用ポリシー\n課題はメンバーの誰が作ってもOKです。\n課題が完了したら、状態を「処理済み」に変更してxxxさんを担当に設定してください。\nxxxさんは確認後、問題なしと判断したら課題を「完了」としてください。\n\n# ドキュメント\n\n* ドキュメント1\n* ドキュメント2\n\n# 参考リンク\n[backlog](http://www.backlog.jp)\n\n# テキスト整形のルール\n\n## 見出し\n見出しでテキストを階層化することで、ドキュメントを理解しやすくできます。\n\n# 見出し1\n## 見出し2\n### 見出し3\n#### 見出し4\n##### 見出し5\n\n## テキスト整形\n文字を整形して、強調したい部分を目立たせたり、整えることができます。ツールバーを使用することもできます。\n\n引用や絵文字を使うこともできます。\n\n> 引用した\n> 文章です。\n\nプログラムのソースコードを見やすく貼り付けることもできます。\n\n```\npackage helloworld;\npublic class Hello {\n  public String sayHello {\n    return \"Hello\";\n  }\n}\n```\n\n## リストとテーブル\n箇条書き、数字付きの箇条書きやテーブルを使って、情報を整理することができます。\n\n### 箇条書き\n\n* やること 1\n* やること 2\n* やること 3\n\n### 箇条書き（数字）\n\n1. 手順 1\n2. 手順 2\n3. 手順 3\n\n### テーブル\n| 項目名 1 | 項目名 2 | 項目名 3 |\n| ------------- | ------------- | ------------- |\n| タイトル | 概要 | 詳細 |\n| タイトル | 概要 | 詳細 |\n\n## リンク\nhtmlを知らなくても、簡単にリンクを貼ることができます。\n\n* http://www.backlog.jp/\n* [Backlog](http://www.backlog.jp/)\n\n## ファイル添付\n関連するファイルを添付することができます。\n\n更に詳細なテキスト整形のルールを知りたい場合は、右上の「テキスト整形のルール」をご確認下さい。",
+  "tags": [],
+  "attachments": [],
+  "sharedFiles": [],
+  "stars": [],
+  "createdUser": {
+    "id": 1961569,
+    "userId": "SOv0v6HWYm",
+    "name": "山本智世",
+    "roleType": 1,
+    "lang": "ja",
+    "mailAddress": "tmyymmt@gmail.com",
+    "nulabAccount": {
+      "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+      "name": "山本智世",
+      "uniqueId": "tmyymmt",
+      "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+    },
+    "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+    "lastLoginTime": "2025-06-03T13:01:34Z"
+  },
+  "created": "2025-05-25T06:10:04Z",
+  "updatedUser": {
+    "id": 1961569,
+    "userId": "SOv0v6HWYm",
+    "name": "山本智世",
+    "roleType": 1,
+    "lang": "ja",
+    "mailAddress": "tmyymmt@gmail.com",
+    "nulabAccount": {
+      "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+      "name": "山本智世",
+      "uniqueId": "tmyymmt",
+      "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+    },
+    "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+    "lastLoginTime": "2025-06-03T13:01:34Z"
+  },
+  "updated": "2025-05-25T06:10:04Z"
+}

@@ -404,22 +404,19 @@ class BacklogAPIClient:
             params = {}
         
         # Backlog APIはパスの形式に特定の要件があります
-        # 空のパスや/で始まるパスを適切に処理
-        if path == "/":
-            path = ""  # ルートディレクトリの場合は空文字に
-        elif path.startswith("/"):
-            path = path[1:]  # 先頭のスラッシュを削除
-            
-        # パスの区切り文字をURLエンコード
-        encoded_path = path if not path else urllib.parse.quote(path)
-            
-        # Backlogのファイル一覧取得API
-        # https://developer.nulab.com/ja/docs/backlog/api/2/get-list-of-shared-files/
-        endpoint = f"/projects/{project_id_or_key}/files"
-        if encoded_path:
-            params["path"] = encoded_path
+        # 正しいエンドポイント形式: /projects/:projectIdOrKey/files/metadata/:path
+        if path == "" or path == "/":
+            # ルートディレクトリの場合は '/' をパスとして使用
+            endpoint = f"/projects/{project_id_or_key}/files/metadata/"
         else:
-            params["path"] = "/"
+            # サブディレクトリの場合
+            # パスの前後のスラッシュを適切に処理
+            clean_path = path.strip("/")
+            if clean_path:
+                encoded_path = urllib.parse.quote(clean_path, safe="/")
+                endpoint = f"/projects/{project_id_or_key}/files/metadata/{encoded_path}/"
+            else:
+                endpoint = f"/projects/{project_id_or_key}/files/metadata/"
             
         try:
             return self.get(endpoint, params=params)
@@ -439,6 +436,7 @@ class BacklogAPIClient:
         """
         # Backlog APIでファイルコンテンツをダウンロードするエンドポイント
         # https://developer.nulab.com/ja/docs/backlog/api/2/get-file/
+        # 正しいエンドポイント形式: /projects/:projectIdOrKey/files/:sharedFileId
         endpoint = f"/projects/{project_id_or_key}/files/{file_id}"
         try:
             response_content = self._make_request("GET", endpoint)

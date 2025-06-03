@@ -1,0 +1,44 @@
+{
+  "id": 4478866,
+  "projectId": 642618,
+  "name": "振り返りテンプレート",
+  "content": "# 振り返り: [チーム名を入れてください]\n\n## [日付を入れてください]\n\n## 参加者: [参加者を入れてください]\n\n### Keep(良かったこと・継続すること)\n\n* [良かったこと・継続することを書いてください]\n\n### Problem(解決すべき課題)\n\n* [解決すべき課題を書いてください]\n\n### Try(次に取り組むこと)\n\n* [次に取り組むことを書いてください]\n\n### 決定事項\n\n* [決定した事項を書いてください]\n",
+  "tags": [],
+  "attachments": [],
+  "sharedFiles": [],
+  "stars": [],
+  "createdUser": {
+    "id": 1961569,
+    "userId": "SOv0v6HWYm",
+    "name": "山本智世",
+    "roleType": 1,
+    "lang": "ja",
+    "mailAddress": "tmyymmt@gmail.com",
+    "nulabAccount": {
+      "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+      "name": "山本智世",
+      "uniqueId": "tmyymmt",
+      "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+    },
+    "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+    "lastLoginTime": "2025-06-03T13:01:34Z"
+  },
+  "created": "2025-05-25T06:10:04Z",
+  "updatedUser": {
+    "id": 1961569,
+    "userId": "SOv0v6HWYm",
+    "name": "山本智世",
+    "roleType": 1,
+    "lang": "ja",
+    "mailAddress": "tmyymmt@gmail.com",
+    "nulabAccount": {
+      "nulabId": "zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78",
+      "name": "山本智世",
+      "uniqueId": "tmyymmt",
+      "iconUrl": "https://apps.nulab.com/account/zDB1kWI5i1i6SDaRlhPwpYe4YboU1jN3a4cWQT42j635Z1MH78/photo/large?t=1748153519"
+    },
+    "keyword": "山本智世 YAMAMOTOTOMOYOCHIYO",
+    "lastLoginTime": "2025-06-03T13:01:34Z"
+  },
+  "updated": "2025-05-25T06:10:04Z"
+}
