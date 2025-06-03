@@ -113,8 +113,8 @@ def _backup_svn_repository(
         True if successful, False otherwise
     """
     try:
-        # Construct repository URL
-        repo_url = f"https://{client.domain}/svn/{project_key}/{repo_name}"
+        # Backlog APIの仕様上、SVNのURLはhttps://{domain}/svn/{project_key}の形式
+        repo_url = f"https://{client.domain}/svn/{project_key}"
         
         # Create repository directory
         repo_dir = svn_dir / repo_name

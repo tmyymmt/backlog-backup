@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<info>
+<entry
+   path="PROJECT1"
+   revision="2"
+   kind="dir">
+<url>https://tmyymmt.backlog.com/svn/PROJECT1</url>
+<relative-url>^/</relative-url>
+<repository>
+<root>https://tmyymmt.backlog.com/svn/PROJECT1</root>
+<uuid>971A423E-392F-11F0-999A-953958A79CAA</uuid>
+</repository>
+<commit
+   revision="2">
+<author>tmyymmt@gmail.com</author>
+<date>2025-06-03T13:35:18.725172Z</date>
+</commit>
+</entry>
+</info>

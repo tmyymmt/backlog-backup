@@ -364,20 +364,37 @@ class BacklogAPIClient:
         Returns:
             List of Subversion repositories
         """
-        endpoint = f"/projects/{project_id_or_key}/svn/repositories"
-        return self.get(endpoint)
+        # BacklogではSVNリポジトリの情報はプロジェクト情報から取得します
+        # SVNリポジトリのURLは https://{domain}/svn/{project_key}/ の形式です
+        try:
+            # プロジェクト情報からSVNの有無を確認
+            project_info = self.get_project(project_id_or_key)
+            if project_info.get("useSubversion", False):
+                # SVNがあれば、リポジトリ情報を返す
+                svn_repo = {
+                    "id": 1,  # デフォルト値
+                    "name": project_id_or_key,  # プロジェクトキーをリポジトリ名とする
+                    "projectId": project_info.get("id"),
+                    "projectKey": project_id_or_key,
+                    "url": f"https://{self.domain}/svn/{project_id_or_key}"
+                }
+                return [svn_repo]
+            return []
+        except ValueError as e:
+            self.logger.warning(f"Failed to get SVN repositories for project {project_id_or_key}: {str(e)}")
+            return []
     
     def get_shared_files(
         self, 
         project_id_or_key: str,
-        path: str = "/",
+        path: str = "",
         params: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
         """Get shared files in a project.
         
         Args:
             project_id_or_key: Project ID or key
-            path: Directory path (default: root directory "/")
+            path: Directory path (default: root directory "")
             params: Additional query parameters
             
         Returns:
@@ -386,9 +403,29 @@ class BacklogAPIClient:
         if params is None:
             params = {}
         
-        params["path"] = path
-        endpoint = f"/projects/{project_id_or_key}/files/metadata"
-        return self.get(endpoint, params=params)
+        # Backlog APIはパスの形式に特定の要件があります
+        # 空のパスや/で始まるパスを適切に処理
+        if path == "/":
+            path = ""  # ルートディレクトリの場合は空文字に
+        elif path.startswith("/"):
+            path = path[1:]  # 先頭のスラッシュを削除
+            
+        # パスの区切り文字をURLエンコード
+        encoded_path = path if not path else urllib.parse.quote(path)
+            
+        # Backlogのファイル一覧取得API
+        # https://developer.nulab.com/ja/docs/backlog/api/2/get-list-of-shared-files/
+        endpoint = f"/projects/{project_id_or_key}/files"
+        if encoded_path:
+            params["path"] = encoded_path
+        else:
+            params["path"] = "/"
+            
+        try:
+            return self.get(endpoint, params=params)
+        except ValueError as e:
+            self.logger.warning(f"Failed to get shared files for project {project_id_or_key} at path '{path}': {str(e)}")
+            return []
     
     def download_shared_file(self, project_id_or_key: str, file_id: str) -> bytes:
         """Download a shared file.
@@ -400,9 +437,15 @@ class BacklogAPIClient:
         Returns:
             File content as bytes
         """
+        # Backlog APIでファイルコンテンツをダウンロードするエンドポイント
+        # https://developer.nulab.com/ja/docs/backlog/api/2/get-file/
         endpoint = f"/projects/{project_id_or_key}/files/{file_id}"
-        response_content = self._make_request("GET", endpoint)
-        if isinstance(response_content, bytes):
-            return response_content
-        else:
-            raise ValueError(f"Expected binary content for file download, got: {type(response_content)}")
+        try:
+            response_content = self._make_request("GET", endpoint)
+            if isinstance(response_content, bytes):
+                return response_content
+            else:
+                raise ValueError(f"Expected binary content for file download, got: {type(response_content)}")
+        except ValueError as e:
+            self.logger.warning(f"Failed to download file {file_id} for project {project_id_or_key}: {str(e)}")
+            return b''

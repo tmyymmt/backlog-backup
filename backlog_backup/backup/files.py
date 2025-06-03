@@ -79,7 +79,7 @@ def _backup_directory(
         for item in items:
             item_type = item.get('type')
             item_name = item.get('name', 'unnamed_item')
-            item_id = item.get('id')
+            item_id = str(item.get('id', ''))
             
             # Sanitize filename
             safe_name = _sanitize_filename(item_name)
