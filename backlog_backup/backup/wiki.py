@@ -66,6 +66,11 @@ def backup_wiki(
                 _save_wiki_json(detailed_page, json_file)
                 logger.debug(f"Saved wiki page {page_name} to {json_file}")
                 
+                # Save wiki page content as Markdown file
+                md_file = wiki_dir / f"{safe_page_name}.md"
+                _save_wiki_markdown(detailed_page, md_file)
+                logger.debug(f"Saved wiki page content {page_name} to {md_file}")
+                
                 # Download wiki attachments if any
                 attachments = detailed_page.get('attachments', [])
                 if attachments:
@@ -94,6 +99,13 @@ def _save_wiki_json(page: Dict[str, Any], json_file: Path) -> None:
     """Save individual wiki page as JSON file."""
     with open(json_file, 'w', encoding='utf-8') as f:
         json.dump(page, f, ensure_ascii=False, indent=2, default=str)
+
+
+def _save_wiki_markdown(page: Dict[str, Any], md_file: Path) -> None:
+    """Save individual wiki page content as Markdown file."""
+    content = page.get('content', '')
+    with open(md_file, 'w', encoding='utf-8') as f:
+        f.write(content)
 
 
 def _download_wiki_attachments(
