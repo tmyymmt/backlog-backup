@@ -14,6 +14,8 @@ def backup_git(
     client: BacklogAPIClient,
     project_key: str,
     output_dir: Path,
+    git_username: Optional[str] = None,
+    git_password: Optional[str] = None,
     **kwargs
 ) -> None:
     """
@@ -23,6 +25,8 @@ def backup_git(
         client: Backlog API client instance
         project_key: Project key to backup Git repos from
         output_dir: Directory to save backup files
+        git_username: Username for Git authentication
+        git_password: Password for Git authentication
         **kwargs: Additional options
     """
     logger.info(f"Starting Git backup for project: {project_key}")
@@ -64,7 +68,9 @@ def backup_git(
                     project_key, 
                     repo_name, 
                     repo_id, 
-                    git_dir
+                    git_dir,
+                    git_username,
+                    git_password
                 )
                 
                 if success:
@@ -87,7 +93,9 @@ def _clone_repository(
     project_key: str, 
     repo_name: str,
     repo_id: int,
-    git_dir: Path
+    git_dir: Path,
+    git_username: Optional[str] = None,
+    git_password: Optional[str] = None
 ) -> bool:
     """
     Clone a Git repository using git clone --mirror.
@@ -98,50 +106,81 @@ def _clone_repository(
         repo_name: Repository name
         repo_id: Repository ID
         git_dir: Directory to clone repository into
+        git_username: Username for Git authentication
+        git_password: Password for Git authentication
     
     Returns:
         True if successful, False otherwise
     """
     try:
         # Construct repository URL
-        # Backlog Git repository URL format: https://domain/git/PROJECT_KEY/repo_name.git
-        repo_url = f"https://{client.domain}/git/{project_key}/{repo_name}.git"
+        base_repo_url = f"https://{client.domain}/git/{project_key}/{repo_name}.git"
         
         # Create repository directory
         repo_dir = git_dir / f"{repo_name}.git"
         
-        logger.info(f"Cloning Git repository: {repo_url}")
+        logger.info(f"Cloning Git repository: {repo_name}")
+        logger.debug(f"Repository URL: {base_repo_url}")
         
-        # Use git clone --mirror to create a bare repository backup
-        # This preserves all branches, tags, and refs
-        cmd = [
-            "git", "clone", "--mirror",
-            repo_url,
-            str(repo_dir)
-        ]
+        # Build git clone command
+        cmd = ["git", "clone", "--mirror", base_repo_url, str(repo_dir)]
         
-        # Set up authentication using API key
-        env = {
-            "GIT_ASKPASS": "echo",
-            "GIT_USERNAME": client.api_key,
-            "GIT_PASSWORD": "",
-        }
+        # Set up environment for git
+        import os
+        env = os.environ.copy()
+        env.update({
+            "GIT_TERMINAL_PROMPT": "0",  # Disable interactive prompts
+        })
+        
+        # Set up authentication if credentials are provided
+        if git_username and git_password:
+            # Use credential helper approach for authentication
+            import tempfile
+            import urllib.parse
+            
+            # Create temporary credential helper script
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+                f.write(f"""#!/usr/bin/env python3
+import sys
+if len(sys.argv) > 1 and sys.argv[1] == 'get':
+    print('username={git_username}')
+    print('password={git_password}')
+""")
+                credential_helper = f.name
+            
+            os.chmod(credential_helper, 0o755)
+            
+            # Configure git to use our credential helper
+            env['GIT_CONFIG_COUNT'] = '1'
+            env['GIT_CONFIG_KEY_0'] = 'credential.helper'
+            env['GIT_CONFIG_VALUE_0'] = f'!{credential_helper}'
         
         # Run git clone command
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=300,  # 5 minute timeout
-            env=env
-        )
-        
-        if result.returncode == 0:
-            logger.debug(f"Successfully cloned repository {repo_name}")
-            return True
-        else:
-            logger.error(f"Git clone failed for {repo_name}: {result.stderr}")
-            return False
+        try:
+            logger.debug(f"Running command: {' '.join(cmd)}")
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
+                env=env
+            )
+            
+            if result.returncode == 0:
+                logger.info(f"Successfully cloned repository {repo_name}")
+                return True
+            else:
+                logger.error(f"Git clone failed for {repo_name}")
+                logger.error(f"STDOUT: {result.stdout}")
+                logger.error(f"STDERR: {result.stderr}")
+                return False
+        finally:
+            # Clean up credential helper file if it was created
+            if git_username and git_password and 'credential_helper' in locals():
+                try:
+                    os.unlink(credential_helper)
+                except OSError:
+                    pass
             
     except subprocess.TimeoutExpired:
         logger.error(f"Git clone timeout for repository {repo_name}")

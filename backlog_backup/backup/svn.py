@@ -14,6 +14,8 @@ def backup_svn(
     client: BacklogAPIClient,
     project_key: str,
     output_dir: Path,
+    svn_username: Optional[str] = None,
+    svn_password: Optional[str] = None,
     **kwargs
 ) -> None:
     """
@@ -23,6 +25,8 @@ def backup_svn(
         client: Backlog API client instance
         project_key: Project key to backup SVN repos from
         output_dir: Directory to save backup files
+        svn_username: Username for SVN authentication
+        svn_password: Password for SVN authentication
         **kwargs: Additional options
     """
     logger.info(f"Starting SVN backup for project: {project_key}")
@@ -64,7 +68,9 @@ def backup_svn(
                     project_key, 
                     repo_name, 
                     repo_id, 
-                    svn_dir
+                    svn_dir,
+                    svn_username,
+                    svn_password
                 )
                 
                 if success:
@@ -87,7 +93,9 @@ def _backup_svn_repository(
     project_key: str, 
     repo_name: str,
     repo_id: int,
-    svn_dir: Path
+    svn_dir: Path,
+    svn_username: Optional[str] = None,
+    svn_password: Optional[str] = None
 ) -> bool:
     """
     Backup an SVN repository using svn checkout.
@@ -98,33 +106,40 @@ def _backup_svn_repository(
         repo_name: Repository name
         repo_id: Repository ID
         svn_dir: Directory to backup repository into
+        svn_username: Username for SVN authentication
+        svn_password: Password for SVN authentication
     
     Returns:
         True if successful, False otherwise
     """
     try:
         # Construct repository URL
-        # Backlog SVN repository URL format: https://domain/svn/PROJECT_KEY/repo_name
         repo_url = f"https://{client.domain}/svn/{project_key}/{repo_name}"
         
         # Create repository directory
         repo_dir = svn_dir / repo_name
         
-        logger.info(f"Checking out SVN repository: {repo_url}")
+        logger.info(f"Checking out SVN repository: {repo_name}")
+        logger.debug(f"Repository URL: {repo_url}")
         
-        # Use svn checkout to get the latest version
-        # For a full backup, we might want to use svnadmin dump if we had server access
+        # Build svn checkout command
         cmd = [
             "svn", "checkout",
             repo_url,
             str(repo_dir),
-            "--username", client.api_key,
-            "--password", "",
             "--non-interactive",
-            "--trust-server-cert"
+            "--trust-server-cert-failures=unknown-ca,cn-mismatch,expired,not-yet-valid,other"
         ]
         
+        # Add authentication parameters if credentials are provided
+        if svn_username and svn_password:
+            cmd.extend([
+                "--username", svn_username,
+                "--password", svn_password
+            ])
+        
         # Run svn checkout command
+        logger.debug(f"Running command: svn checkout {repo_url} {str(repo_dir)} [authentication parameters hidden]")
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -133,14 +148,16 @@ def _backup_svn_repository(
         )
         
         if result.returncode == 0:
-            logger.debug(f"Successfully checked out SVN repository {repo_name}")
+            logger.info(f"Successfully checked out SVN repository {repo_name}")
             
             # Also try to get repository info and save it
-            _save_svn_info(repo_url, repo_dir, client.api_key)
+            _save_svn_info(repo_url, repo_dir, svn_username, svn_password)
             
             return True
         else:
-            logger.error(f"SVN checkout failed for {repo_name}: {result.stderr}")
+            logger.error(f"SVN checkout failed for {repo_name}")
+            logger.error(f"STDOUT: {result.stdout}")
+            logger.error(f"STDERR: {result.stderr}")
             return False
             
     except subprocess.TimeoutExpired:
@@ -151,18 +168,23 @@ def _backup_svn_repository(
         return False
 
 
-def _save_svn_info(repo_url: str, repo_dir: Path, api_key: str) -> None:
+def _save_svn_info(repo_url: str, repo_dir: Path, svn_username: Optional[str] = None, svn_password: Optional[str] = None) -> None:
     """Save SVN repository information."""
     try:
         # Get SVN info
         cmd = [
             "svn", "info", repo_url,
-            "--username", api_key,
-            "--password", "",
             "--non-interactive",
-            "--trust-server-cert",
+            "--trust-server-cert-failures=unknown-ca,cn-mismatch,expired,not-yet-valid,other",
             "--xml"
         ]
+        
+        # Add authentication parameters if credentials are provided
+        if svn_username and svn_password:
+            cmd.extend([
+                "--username", svn_username,
+                "--password", svn_password
+            ])
         
         result = subprocess.run(
             cmd,

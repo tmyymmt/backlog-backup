@@ -61,6 +61,20 @@ def parse_args() -> argparse.Namespace:
         "--api-key", required=False, help="Backlog API key (can also be set via BACKLOG_API_KEY environment variable)"
     )
     
+    # Git/SVN authentication settings
+    parser.add_argument(
+        "--git-username", help="Username for Git repository authentication (can also be set via BACKLOG_GIT_USERNAME environment variable)"
+    )
+    parser.add_argument(
+        "--git-password", help="Password for Git repository authentication (can also be set via BACKLOG_GIT_PASSWORD environment variable)"
+    )
+    parser.add_argument(
+        "--svn-username", help="Username for SVN repository authentication (can also be set via BACKLOG_SVN_USERNAME environment variable)"
+    )
+    parser.add_argument(
+        "--svn-password", help="Password for SVN repository authentication (can also be set via BACKLOG_SVN_PASSWORD environment variable)"
+    )
+    
     # Project settings
     project_group = parser.add_mutually_exclusive_group()
     project_group.add_argument(
@@ -157,7 +171,11 @@ def backup_project(
     backup_wiki_flag: bool,
     backup_files_flag: bool,
     backup_git_flag: bool,
-    backup_svn_flag: bool
+    backup_svn_flag: bool,
+    git_username: Optional[str] = None,
+    git_password: Optional[str] = None,
+    svn_username: Optional[str] = None,
+    svn_password: Optional[str] = None
 ) -> None:
     """Backup a single project.
     
@@ -171,6 +189,10 @@ def backup_project(
         backup_files_flag: Whether to backup files
         backup_git_flag: Whether to backup Git repositories
         backup_svn_flag: Whether to backup SVN repositories
+        git_username: Username for Git authentication
+        git_password: Password for Git authentication
+        svn_username: Username for SVN authentication
+        svn_password: Password for SVN authentication
     """
     project_output_dir = output_dir / project_key
     project_output_dir.mkdir(parents=True, exist_ok=True)
@@ -207,7 +229,7 @@ def backup_project(
             
         if backup_git_flag:
             try:
-                backup_git(client, project_key, project_output_dir)
+                backup_git(client, project_key, project_output_dir, git_username=git_username, git_password=git_password)
             except Exception as e:
                 error_msg = f"Git backup failed: {e}"
                 logging.warning(error_msg)
@@ -215,7 +237,7 @@ def backup_project(
             
         if backup_svn_flag:
             try:
-                backup_svn(client, project_key, project_output_dir)
+                backup_svn(client, project_key, project_output_dir, svn_username=svn_username, svn_password=svn_password)
             except Exception as e:
                 error_msg = f"SVN backup failed: {e}"
                 logging.warning(error_msg)
@@ -246,6 +268,12 @@ def main() -> int:
     if not api_key:
         logging.error("API key must be provided either via --api-key argument or BACKLOG_API_KEY environment variable")
         return 1
+    
+    # Get Git/SVN credentials from arguments or environment variables
+    git_username = args.git_username or os.environ.get("BACKLOG_GIT_USERNAME")
+    git_password = args.git_password or os.environ.get("BACKLOG_GIT_PASSWORD")
+    svn_username = args.svn_username or os.environ.get("BACKLOG_SVN_USERNAME")
+    svn_password = args.svn_password or os.environ.get("BACKLOG_SVN_PASSWORD")
         
     # Create Backlog API client
     client = BacklogAPIClient(args.domain, api_key)
@@ -300,7 +328,11 @@ def main() -> int:
                     backup_wiki_flag,
                     backup_files_flag,
                     backup_git_flag,
-                    backup_svn_flag
+                    backup_svn_flag,
+                    git_username,
+                    git_password,
+                    svn_username,
+                    svn_password
                 )
                 
             logging.info(f"Backup for all projects completed. Files saved to {output_dir}")
@@ -317,7 +349,11 @@ def main() -> int:
                 backup_wiki_flag,
                 backup_files_flag,
                 backup_git_flag,
-                backup_svn_flag
+                backup_svn_flag,
+                git_username,
+                git_password,
+                svn_username,
+                svn_password
             )
             return 0
             
