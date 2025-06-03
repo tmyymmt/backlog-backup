@@ -279,7 +279,7 @@ class BacklogAPIClient:
         Returns:
             Attachment content as bytes
         """
-        endpoint = f"/issues/{issue_id_or_key}/attachments/{attachment_id}/download"
+        endpoint = f"/issues/{issue_id_or_key}/attachments/{attachment_id}"
         # Use _make_request directly to handle binary content properly
         response_content = self._make_request("GET", endpoint)
         if isinstance(response_content, bytes):
@@ -364,5 +364,86 @@ class BacklogAPIClient:
         Returns:
             List of Subversion repositories
         """
-        endpoint = f"/projects/{project_id_or_key}/svn/repositories"
-        return self.get(endpoint)
+        # BacklogではSVNリポジトリの情報はプロジェクト情報から取得します
+        # SVNリポジトリのURLは https://{domain}/svn/{project_key}/ の形式です
+        try:
+            # プロジェクト情報からSVNの有無を確認
+            project_info = self.get_project(project_id_or_key)
+            if project_info.get("useSubversion", False):
+                # SVNがあれば、リポジトリ情報を返す
+                svn_repo = {
+                    "id": 1,  # デフォルト値
+                    "name": project_id_or_key,  # プロジェクトキーをリポジトリ名とする
+                    "projectId": project_info.get("id"),
+                    "projectKey": project_id_or_key,
+                    "url": f"https://{self.domain}/svn/{project_id_or_key}"
+                }
+                return [svn_repo]
+            return []
+        except ValueError as e:
+            self.logger.warning(f"Failed to get SVN repositories for project {project_id_or_key}: {str(e)}")
+            return []
+    
+    def get_shared_files(
+        self, 
+        project_id_or_key: str,
+        path: str = "",
+        params: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
+        """Get shared files in a project.
+        
+        Args:
+            project_id_or_key: Project ID or key
+            path: Directory path (default: root directory "")
+            params: Additional query parameters
+            
+        Returns:
+            List of shared files and directories
+        """
+        if params is None:
+            params = {}
+        
+        # Backlog APIはパスの形式に特定の要件があります
+        # 正しいエンドポイント形式: /projects/:projectIdOrKey/files/metadata/:path
+        if path == "" or path == "/":
+            # ルートディレクトリの場合は '/' をパスとして使用
+            endpoint = f"/projects/{project_id_or_key}/files/metadata/"
+        else:
+            # サブディレクトリの場合
+            # パスの前後のスラッシュを適切に処理
+            clean_path = path.strip("/")
+            if clean_path:
+                encoded_path = urllib.parse.quote(clean_path, safe="/")
+                endpoint = f"/projects/{project_id_or_key}/files/metadata/{encoded_path}/"
+            else:
+                endpoint = f"/projects/{project_id_or_key}/files/metadata/"
+            
+        try:
+            return self.get(endpoint, params=params)
+        except ValueError as e:
+            self.logger.warning(f"Failed to get shared files for project {project_id_or_key} at path '{path}': {str(e)}")
+            return []
+    
+    def download_shared_file(self, project_id_or_key: str, file_id: str) -> bytes:
+        """Download a shared file.
+        
+        Args:
+            project_id_or_key: Project ID or key
+            file_id: File ID
+            
+        Returns:
+            File content as bytes
+        """
+        # Backlog APIでファイルコンテンツをダウンロードするエンドポイント
+        # https://developer.nulab.com/ja/docs/backlog/api/2/get-file/
+        # 正しいエンドポイント形式: /projects/:projectIdOrKey/files/:sharedFileId
+        endpoint = f"/projects/{project_id_or_key}/files/{file_id}"
+        try:
+            response_content = self._make_request("GET", endpoint)
+            if isinstance(response_content, bytes):
+                return response_content
+            else:
+                raise ValueError(f"Expected binary content for file download, got: {type(response_content)}")
+        except ValueError as e:
+            self.logger.warning(f"Failed to download file {file_id} for project {project_id_or_key}: {str(e)}")
+            return b''

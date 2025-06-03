@@ -1,89 +1,142 @@
-"""Module for backing up Backlog wiki pages."""
+"""Wiki backup functionality for Backlog."""
 
 import json
 import logging
-import os
+import re
+from typing import List, Dict, Any, Optional
 from pathlib import Path
-from typing import Any, Dict, List
 
 from ..api.client import BacklogAPIClient
 
+logger = logging.getLogger(__name__)
 
-def backup_wiki(domain: str, api_key: str, project_key: str, output_dir: Path) -> None:
-    """Backup wiki pages for a project.
+
+def backup_wiki(
+    client: BacklogAPIClient,
+    project_key: str,
+    output_dir: Path,
+    **kwargs
+) -> None:
+    """
+    Backup all wiki pages from a Backlog project.
     
     Args:
-        domain: Backlog domain (e.g., 'example.backlog.com')
-        api_key: Backlog API key
-        project_key: Project key
-        output_dir: Output directory for backup files
-    
-    Raises:
-        ValueError: If backup fails
+        client: Backlog API client instance
+        project_key: Project key to backup wiki from
+        output_dir: Directory to save backup files
+        **kwargs: Additional options
     """
-    logger = logging.getLogger(__name__)
-    client = BacklogAPIClient(domain, api_key)
-    
-    logger.info(f"Backing up wiki pages for project {project_key}")
-    
-    # Create wiki directory
-    wiki_dir = output_dir / "wiki"
-    wiki_dir.mkdir(exist_ok=True)
-    
-    # Create attachments directory
-    attachments_dir = wiki_dir / "attachments"
-    attachments_dir.mkdir(exist_ok=True)
+    logger.info(f"Starting wiki backup for project: {project_key}")
     
     try:
+        # Create wiki directory
+        wiki_dir = output_dir / "wiki"
+        wiki_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Get project information
+        project = client.get_project(project_key)
+        if not project:
+            logger.error(f"Project {project_key} not found")
+            return
+        
+        logger.info(f"Found project: {project.get('name', project_key)}")
+        
         # Get all wiki pages for the project
         wiki_pages = client.get_wikis(project_key)
-        logger.info(f"Found {len(wiki_pages)} wiki pages")
         
-        # Save wiki index
-        wiki_index_path = wiki_dir / "wiki_index.json"
-        with open(wiki_index_path, "w", encoding="utf-8") as f:
-            json.dump(wiki_pages, f, ensure_ascii=False, indent=2)
+        if not wiki_pages:
+            logger.warning(f"No wiki pages found for project {project_key}")
+            return
+        
+        logger.info(f"Found {len(wiki_pages)} wiki pages to backup")
         
         # Save each wiki page
-        for wiki_page in wiki_pages:
-            wiki_id = wiki_page["id"]
-            wiki_name = wiki_page["name"]
+        for page in wiki_pages:
+            page_id = page.get('id')
+            page_name = page.get('name', f'page_{page_id}')
             
-            logger.info(f"Backing up wiki page: {wiki_name}")
+            # Sanitize page name for filename
+            safe_page_name = _sanitize_filename(page_name)
             
-            # Get full wiki page content
-            wiki_content = client.get_wiki(wiki_id)
-            
-            # Save wiki page as JSON
-            wiki_file_path = wiki_dir / f"{wiki_name}.json"
-            with open(wiki_file_path, "w", encoding="utf-8") as f:
-                json.dump(wiki_content, f, ensure_ascii=False, indent=2)
-            
-            # Save wiki page content as Markdown
-            wiki_markdown_path = wiki_dir / f"{wiki_name}.md"
-            with open(wiki_markdown_path, "w", encoding="utf-8") as f:
-                f.write(wiki_content.get("content", ""))
-            
-            # Download attachments
-            attachments = client.get_wiki_attachments(wiki_id)
-            if attachments:
-                wiki_attachments_dir = attachments_dir / wiki_name
-                wiki_attachments_dir.mkdir(exist_ok=True)
+            # Get detailed wiki page content
+            detailed_page = client.get_wiki(str(page_id))
+            if detailed_page:
+                # Save wiki page as JSON
+                json_file = wiki_dir / f"{safe_page_name}.json"
+                _save_wiki_json(detailed_page, json_file)
+                logger.debug(f"Saved wiki page {page_name} to {json_file}")
                 
-                for attachment in attachments:
-                    attachment_id = attachment["id"]
-                    attachment_name = attachment["name"]
-                    
-                    logger.info(f"Downloading attachment {attachment_name} for wiki {wiki_name}")
-                    
-                    attachment_content = client.download_wiki_attachment(wiki_id, attachment_id)
-                    attachment_path = wiki_attachments_dir / attachment_name
-                    
-                    with open(attachment_path, "wb") as f:
-                        f.write(attachment_content)
+                # Save wiki page content as Markdown file
+                md_file = wiki_dir / f"{safe_page_name}.md"
+                _save_wiki_markdown(detailed_page, md_file)
+                logger.debug(f"Saved wiki page content {page_name} to {md_file}")
+                
+                # Download wiki attachments if any
+                attachments = detailed_page.get('attachments', [])
+                if attachments:
+                    _download_wiki_attachments(client, safe_page_name, page_id, attachments, wiki_dir)
         
-        logger.info(f"Wiki backup completed: {wiki_dir}")
+        logger.info(f"Wiki backup completed for project: {project_key}")
         
     except Exception as e:
-        logger.error(f"Failed to backup wiki: {e}")
-        raise ValueError(f"Wiki backup failed: {e}")
+        logger.error(f"Failed to backup wiki for project {project_key}: {str(e)}")
+        raise
+
+
+def _sanitize_filename(filename: str) -> str:
+    """Sanitize filename for safe file system usage."""
+    # Replace problematic characters with underscores
+    safe_name = re.sub(r'[<>:"/\\|?*]', '_', filename)
+    # Remove leading/trailing spaces and dots
+    safe_name = safe_name.strip(' .')
+    # Limit length
+    if len(safe_name) > 200:
+        safe_name = safe_name[:200]
+    return safe_name or 'unnamed_page'
+
+
+def _save_wiki_json(page: Dict[str, Any], json_file: Path) -> None:
+    """Save individual wiki page as JSON file."""
+    with open(json_file, 'w', encoding='utf-8') as f:
+        json.dump(page, f, ensure_ascii=False, indent=2, default=str)
+
+
+def _save_wiki_markdown(page: Dict[str, Any], md_file: Path) -> None:
+    """Save individual wiki page content as Markdown file."""
+    content = page.get('content', '')
+    with open(md_file, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+
+def _download_wiki_attachments(
+    client: BacklogAPIClient, 
+    page_name: str,
+    page_id: int,
+    attachments: List[Dict[str, Any]], 
+    wiki_dir: Path
+) -> None:
+    """Download attachments for a wiki page."""
+    if not attachments:
+        return
+    
+    attachments_dir = wiki_dir / "attachments" / page_name
+    attachments_dir.mkdir(parents=True, exist_ok=True)
+    
+    for attachment in attachments:
+        try:
+            attachment_id = attachment.get('id')
+            filename = attachment.get('name', f'attachment_{attachment_id}')
+            
+            if attachment_id:
+                file_path = attachments_dir / filename
+                # Download attachment content as bytes
+                content = client.download_wiki_attachment(str(page_id), str(attachment_id))
+                
+                # Write content to file
+                with open(file_path, 'wb') as f:
+                    f.write(content)
+                    
+                logger.debug(f"Downloaded wiki attachment {filename} for {page_name}")
+                    
+        except Exception as e:
+            logger.error(f"Error downloading wiki attachment for {page_name}: {str(e)}")

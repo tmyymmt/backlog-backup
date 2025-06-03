@@ -1,132 +1,147 @@
-"""Module for backing up Backlog issues."""
+"""Issue backup functionality for Backlog."""
 
-import csv
 import json
+import csv
 import logging
-import os
+from typing import List, Dict, Any, Optional
 from pathlib import Path
-from typing import Any, Dict, List
+from datetime import datetime
 
 from ..api.client import BacklogAPIClient
 
+logger = logging.getLogger(__name__)
 
-def backup_issues(domain: str, api_key: str, project_key: str, output_dir: Path) -> None:
-    """Backup issues for a project.
+
+def backup_issues(
+    client: BacklogAPIClient,
+    project_key: str,
+    output_dir: Path,
+    **kwargs
+) -> None:
+    """
+    Backup all issues from a Backlog project.
     
     Args:
-        domain: Backlog domain (e.g., 'example.backlog.com')
-        api_key: Backlog API key
-        project_key: Project key
-        output_dir: Output directory for backup files
-    
-    Raises:
-        ValueError: If backup fails
+        client: Backlog API client instance
+        project_key: Project key to backup issues from
+        output_dir: Directory to save backup files
+        **kwargs: Additional options
     """
-    logger = logging.getLogger(__name__)
-    client = BacklogAPIClient(domain, api_key)
-    
-    logger.info(f"Backing up issues for project {project_key}")
-    
-    # Create issues directory
-    issues_dir = output_dir / "issues"
-    issues_dir.mkdir(exist_ok=True)
-    
-    # Create attachments directory
-    attachments_dir = issues_dir / "attachments"
-    attachments_dir.mkdir(exist_ok=True)
+    logger.info(f"Starting issue backup for project: {project_key}")
     
     try:
+        # Create issues directory
+        issues_dir = output_dir / "issues"
+        issues_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Get project information
+        project = client.get_project(project_key)
+        if not project:
+            logger.error(f"Project {project_key} not found")
+            return
+        
+        logger.info(f"Found project: {project.get('name', project_key)}")
+        
         # Get all issues for the project
-        all_issues = []
-        count = 100
-        offset = 0
+        issues = client.get_issues(project_key)
         
-        while True:
-            params = {
-                "count": count,
-                "offset": offset,
-            }
-            issues = client.get_issues(project_key, params=params)
-            all_issues.extend(issues)
+        if not issues:
+            logger.warning(f"No issues found for project {project_key}")
+            return
+        
+        logger.info(f"Found {len(issues)} issues to backup")
+        
+        # Save issue summary as CSV
+        csv_file = issues_dir / "issues_summary.csv"
+        _save_issues_csv(issues, csv_file)
+        logger.info(f"Saved issues summary to {csv_file}")
+        
+        # Save each issue as individual JSON file
+        for issue in issues:
+            issue_key = issue.get('issueKey', f"ISSUE-{issue.get('id', 'unknown')}")
             
-            if len(issues) < count:
-                break
+            # Get detailed issue information (including comments, attachments, etc.)
+            detailed_issue = client.get_issue(issue.get('id'))
+            if detailed_issue:
+                # Save issue details as JSON
+                json_file = issues_dir / f"{issue_key}.json"
+                _save_issue_json(detailed_issue, json_file)
+                logger.debug(f"Saved issue {issue_key} to {json_file}")
                 
-            offset += count
+                # Download attachments if any
+                attachments = detailed_issue.get('attachments', [])
+                if attachments:
+                    _download_issue_attachments(client, issue_key, attachments, issues_dir)
         
-        logger.info(f"Found {len(all_issues)} issues")
-        
-        # Save issue list as CSV
-        issue_list_path = issues_dir / "issue_list.csv"
-        with open(issue_list_path, "w", newline="", encoding="utf-8") as csvfile:
-            fieldnames = [
-                "id", "issueKey", "summary", "status", "priority", 
-                "assignee", "created", "updated", "issue_type"
-            ]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            
-            for issue in all_issues:
-                writer.writerow({
-                    "id": issue.get("id"),
-                    "issueKey": issue.get("issueKey"),
-                    "summary": issue.get("summary"),
-                    "status": issue.get("status", {}).get("name") if issue.get("status") else "",
-                    "priority": issue.get("priority", {}).get("name") if issue.get("priority") else "",
-                    "assignee": issue.get("assignee", {}).get("name") if issue.get("assignee") else "",
-                    "created": issue.get("created"),
-                    "updated": issue.get("updated"),
-                    "issue_type": issue.get("issueType", {}).get("name") if issue.get("issueType") else "",
-                })
-        
-        # Save details for each issue
-        for issue in all_issues:
-            issue_key = issue["issueKey"]
-            issue_id = issue["id"]
-            
-            logger.info(f"Backing up issue {issue_key}")
-            
-            # Get issue details
-            issue_details = client.get_issue(issue_key)
-            
-            # Get issue comments
-            issue_comments = client.get_issue_comments(issue_key)
-            
-            # Combine issue details with comments
-            full_issue_data = {
-                "issue": issue_details,
-                "comments": issue_comments
-            }
-            
-            # Save issue data as JSON
-            issue_file_path = issues_dir / f"{issue_key}.json"
-            with open(issue_file_path, "w", encoding="utf-8") as f:
-                json.dump(full_issue_data, f, ensure_ascii=False, indent=2)
-            
-            # Download attachments
-            attachments = client.get_issue_attachments(issue_key)
-            if attachments:
-                issue_attachments_dir = attachments_dir / issue_key
-                issue_attachments_dir.mkdir(exist_ok=True)
-                
-                for attachment in attachments:
-                    attachment_id = attachment["id"]
-                    attachment_name = attachment["name"]
-                    
-                    logger.info(f"Downloading attachment {attachment_name} for issue {issue_key}")
-                    
-                    try:
-                        attachment_content = client.download_attachment(issue_key, attachment_id)
-                        attachment_path = issue_attachments_dir / attachment_name
-                        
-                        with open(attachment_path, "wb") as f:
-                            f.write(attachment_content)
-                    except Exception as attachment_error:
-                        logger.warning(f"Failed to download attachment {attachment_name} for issue {issue_key}: {attachment_error}")
-                        # Continue with other attachments
-        
-        logger.info(f"Issues backup completed: {issue_list_path}")
+        logger.info(f"Issue backup completed for project: {project_key}")
         
     except Exception as e:
-        logger.error(f"Failed to backup issues: {e}")
-        raise ValueError(f"Issues backup failed: {e}")
+        logger.error(f"Failed to backup issues for project {project_key}: {str(e)}")
+        raise
+
+
+def _save_issues_csv(issues: List[Dict[str, Any]], csv_file: Path) -> None:
+    """Save issues summary as CSV file."""
+    if not issues:
+        return
+    
+    fieldnames = [
+        'issueKey', 'summary', 'description', 'status', 'priority', 
+        'assignee', 'created', 'updated', 'dueDate', 'estimatedHours', 
+        'actualHours', 'issueType', 'category', 'milestone'
+    ]
+    
+    with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        
+        for issue in issues:
+            row = {}
+            for field in fieldnames:
+                value = issue.get(field)
+                if isinstance(value, dict) and 'name' in value:
+                    row[field] = value['name']
+                elif isinstance(value, list) and value and isinstance(value[0], dict) and 'name' in value[0]:
+                    row[field] = ', '.join([item['name'] for item in value])
+                else:
+                    row[field] = value
+            writer.writerow(row)
+
+
+def _save_issue_json(issue: Dict[str, Any], json_file: Path) -> None:
+    """Save individual issue as JSON file."""
+    with open(json_file, 'w', encoding='utf-8') as f:
+        json.dump(issue, f, ensure_ascii=False, indent=2, default=str)
+
+
+def _download_issue_attachments(
+    client: BacklogAPIClient, 
+    issue_key: str, 
+    attachments: List[Dict[str, Any]], 
+    issues_dir: Path
+) -> None:
+    """Download attachments for an issue."""
+    if not attachments:
+        return
+    
+    attachments_dir = issues_dir / "attachments" / issue_key
+    attachments_dir.mkdir(parents=True, exist_ok=True)
+    
+    for attachment in attachments:
+        try:
+            attachment_id = attachment.get('id')
+            filename = attachment.get('name', f'attachment_{attachment_id}')
+            
+            if attachment_id:
+                file_path = attachments_dir / filename
+                # Download attachment content as bytes
+                content = client.download_attachment(issue_key, str(attachment_id))
+                
+                # Write content to file
+                with open(file_path, 'wb') as f:
+                    f.write(content)
+                    
+                logger.debug(f"Downloaded attachment {filename} for {issue_key}")
+                    
+        except Exception as e:
+            logger.error(f"Error downloading attachment for {issue_key}: {str(e)}")

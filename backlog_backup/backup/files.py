@@ -1,98 +1,136 @@
-"""Module for backing up Backlog files."""
+"""File backup functionality for Backlog."""
 
 import logging
-import os
+import json
+import re
+from typing import List, Dict, Any, Optional
 from pathlib import Path
-import time
-from typing import Any, Dict, List, Optional
 
 from ..api.client import BacklogAPIClient
-from ..scraping.browser import BacklogBrowser
+
+logger = logging.getLogger(__name__)
 
 
 def backup_files(
-    domain: str, 
-    api_key: str, 
-    project_key: str, 
+    client: BacklogAPIClient,
+    project_key: str,
     output_dir: Path,
-    username: Optional[str] = None,
-    password: Optional[str] = None
+    **kwargs
 ) -> None:
-    """Backup files for a project.
+    """
+    Backup all shared files from a Backlog project.
     
     Args:
-        domain: Backlog domain (e.g., 'example.backlog.com')
-        api_key: Backlog API key
-        project_key: Project key
-        output_dir: Output directory for backup files
-        username: Optional Backlog username for web scraping
-        password: Optional Backlog password for web scraping
-    
-    Raises:
-        ValueError: If backup fails
+        client: Backlog API client instance
+        project_key: Project key to backup files from
+        output_dir: Directory to save backup files
+        **kwargs: Additional options
     """
-    logger = logging.getLogger(__name__)
-    
-    # Create files directory
-    files_dir = output_dir / "files"
-    files_dir.mkdir(exist_ok=True)
-    
-    logger.info(f"Backing up files for project {project_key}")
-    
-    # Files API is limited in Backlog, so we need to use both API and scraping
-    client = BacklogAPIClient(domain, api_key)
+    logger.info(f"Starting file backup for project: {project_key}")
     
     try:
-        # First try using API if available
-        try:
-            # Note: This is a placeholder - Backlog API doesn't have a direct
-            # method to list all files. You may need to adapt based on
-            # what's available in the Backlog API.
-            logger.info("Attempting to backup files using API")
-            # Implement API-based file backup here if available
-            
-        except Exception as api_error:
-            logger.warning(f"API-based file backup failed: {api_error}")
-            logger.info("Falling back to web scraping for files")
-            
-            if not username or not password:
-                raise ValueError(
-                    "Username and password are required for web scraping files. "
-                    "Please provide them using the --username and --password options."
-                )
-                
-            # Use web scraping as a fallback
-            browser = None
-            try:
-                browser = BacklogBrowser(domain, username, password)
-                file_list = browser.get_project_files(project_key)
-                
-                for file_info in file_list:
-                    file_path = file_info["path"]
-                    file_name = file_info["name"]
-                    file_type = file_info["type"]
-                    
-                    # Create directory structure if needed
-                    path_parts = file_path.split("/")
-                    if len(path_parts) > 1:
-                        dir_path = files_dir / "/".join(path_parts[:-1])
-                        dir_path.mkdir(parents=True, exist_ok=True)
-                    
-                    # Download file if it's not a directory
-                    if file_type != "directory":
-                        output_path = files_dir / file_path
-                        logger.info(f"Downloading file: {file_path}")
-                        browser.download_file(project_key, file_path, output_path)
-                        
-                        # Rate limiting
-                        time.sleep(1)
-                
-            finally:
-                if browser:
-                    browser.close()
+        # Create files directory
+        files_dir = output_dir / "files"
+        files_dir.mkdir(parents=True, exist_ok=True)
         
-        logger.info(f"Files backup completed: {files_dir}")
+        # Get project information
+        project = client.get_project(project_key)
+        if not project:
+            logger.error(f"Project {project_key} not found")
+            return
+        
+        logger.info(f"Found project: {project.get('name', project_key)}")
+        
+        # Recursively backup all files starting from root directory
+        _backup_directory(client, project_key, "/", files_dir)
+        
+        logger.info(f"File backup completed for project: {project_key}")
         
     except Exception as e:
-        logger.error(f"Failed to backup files: {e}")
-        raise ValueError(f"Files backup failed: {e}")
+        logger.error(f"Failed to backup files for project {project_key}: {str(e)}")
+        raise
+
+
+def _backup_directory(
+    client: BacklogAPIClient,
+    project_key: str,
+    directory_path: str,
+    output_dir: Path
+) -> None:
+    """
+    Recursively backup files from a directory.
+    
+    Args:
+        client: Backlog API client instance
+        project_key: Project key
+        directory_path: Path to directory in Backlog
+        output_dir: Local output directory
+    """
+    try:
+        # Get files and directories in current path
+        items = client.get_shared_files(project_key, directory_path)
+        
+        if not items:
+            logger.debug(f"No files found in directory: {directory_path}")
+            return
+        
+        logger.info(f"Found {len(items)} items in directory: {directory_path}")
+        
+        for item in items:
+            item_type = item.get('type')
+            item_name = item.get('name', 'unnamed_item')
+            item_id = str(item.get('id', ''))
+            
+            # Sanitize filename
+            safe_name = _sanitize_filename(item_name)
+            
+            if item_type == 'file':
+                # Download file
+                try:
+                    file_path = output_dir / safe_name
+                    content = client.download_shared_file(project_key, str(item_id))
+                    
+                    with open(file_path, 'wb') as f:
+                        f.write(content)
+                    
+                    # Save file metadata
+                    metadata_file = output_dir / f"{safe_name}.metadata.json"
+                    _save_file_metadata(item, metadata_file)
+                    
+                    logger.debug(f"Downloaded file: {item_name}")
+                    
+                except Exception as e:
+                    logger.error(f"Error downloading file {item_name}: {str(e)}")
+                    
+            elif item_type == 'directory':
+                # Create subdirectory and recursively backup
+                subdir_path = output_dir / safe_name
+                subdir_path.mkdir(parents=True, exist_ok=True)
+                
+                # Construct new directory path for API call
+                new_path = f"{directory_path.rstrip('/')}/{item_name}"
+                if directory_path == "/":
+                    new_path = f"/{item_name}"
+                
+                _backup_directory(client, project_key, new_path, subdir_path)
+                
+    except Exception as e:
+        logger.error(f"Error backing up directory {directory_path}: {str(e)}")
+
+
+def _sanitize_filename(filename: str) -> str:
+    """Sanitize filename for safe file system usage."""
+    # Replace problematic characters with underscores
+    safe_name = re.sub(r'[<>:"/\\|?*]', '_', filename)
+    # Remove leading/trailing spaces and dots
+    safe_name = safe_name.strip(' .')
+    # Limit length
+    if len(safe_name) > 200:
+        safe_name = safe_name[:200]
+    return safe_name or 'unnamed_file'
+
+
+def _save_file_metadata(item: Dict[str, Any], metadata_file: Path) -> None:
+    """Save file metadata as JSON."""
+    with open(metadata_file, 'w', encoding='utf-8') as f:
+        json.dump(item, f, ensure_ascii=False, indent=2, default=str)
